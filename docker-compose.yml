@@ -1,0 +1,51 @@
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: raspberryFut
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - mqtt-net
+
+  mosquitto:
+    build: ./mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - mqtt-net
+
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=raspberryFut
+      - DB_USER=admin
+      - DB_PASSWORD=admin
+    networks:
+      - mqtt-net
+    depends_on:
+      - mosquitto
+      - postgres
+
+networks:
+  mqtt-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+
