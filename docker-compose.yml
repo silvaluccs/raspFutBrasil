@@ -29,6 +29,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - API_URL=https://webws.365scores.com/web/games/current/?appTypeId=5&langId=31&timezoneName=America/Bahia&userCountryId=21&competitions=113&showOdds=false&includeTopBettingOpportunity=1&topBookmaker=156&lastUpdateId=5187162583
       - MQTT_BROKER_HOST=mosquitto
       - MQTT_BROKER_PORT=1883
       - DB_HOST=postgres
