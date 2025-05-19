@@ -1,6 +1,7 @@
 package com.lucas.oliveira.rasp_fut.proxy.mqtt;
 
 import java.util.logging.Logger;
+import java.util.Map;
 
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
@@ -14,10 +15,17 @@ public class MqttMessageHandler {
   @ServiceActivator(inputChannel = "mqttInboundChannel")
   public void handleMessage(Message<?> message) {
 
-    String topic = (String) message.getHeaders().get("mqtt_topic");
     String payload = (String) message.getPayload();
 
-    logger.info("Received message on topic " + topic + ": " + payload);
+    Map<String, Object> headers = message.getHeaders();
+
+    if (headers.isEmpty()) {
+      logger.info("No headers found");
+    } else {
+      headers.forEach((key, value) -> logger.info(key + ": " + value));
+
+    }
+    logger.info("Payload: " + payload);
 
   }
 
