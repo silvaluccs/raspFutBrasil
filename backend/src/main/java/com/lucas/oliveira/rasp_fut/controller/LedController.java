@@ -3,7 +3,7 @@ package com.lucas.oliveira.rasp_fut.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.lucas.oliveira.rasp_fut.service.led.LedService;
+import com.lucas.oliveira.rasp_fut.service.LedService;
 
 @RestController
 public class LedController {
