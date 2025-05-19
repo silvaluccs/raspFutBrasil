@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.lucas.oliveira.rasp_fut.service.TeamService;
+import com.lucas.oliveira.rasp_fut.service.team.TeamService;
 import com.lucas.oliveira.rasp_fut.exception.TeamNotFoundException;
 import com.lucas.oliveira.rasp_fut.model.team.Team;
 
