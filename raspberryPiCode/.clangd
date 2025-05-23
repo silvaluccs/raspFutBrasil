@@ -10,5 +10,5 @@ CompileFlags:
     - -I~/embarcatech/pico-sdk/src/common
     - -I~/embarcatech/pico-sdk/src/boards/include
     - -I~/embarcatech/ic/mqttClient
-    - -I~/embarcatech/ic/mqttClient/include
+    - -I~/java/projeto-fut-placa/raspberryPiCode/include/
 

@@ -34,7 +34,11 @@ project(mqttClient C CXX ASM)
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
+file(GLOB INCLUDES_FILES "includes/*.h")
+file(GLOB SOURCES_FILES "src/*.c")
 add_executable(mqttClient main.c 
+    ${INCLUDES_FILES}
+    ${SOURCES_FILES}
 )
 
 pico_set_program_name(mqttClient "mqttClient")
@@ -88,6 +92,7 @@ target_link_libraries(mqttClient
 # Add the standard include files to the build
 target_include_directories(mqttClient PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/includes
         ${CMAKE_CURRENT_LIST_DIR}/..
 )
 
@@ -100,7 +105,6 @@ target_link_libraries(mqttClient
         pico_mbedtls
         pico_lwip_mbedtls
         hardware_pwm
-        pico_pwm
         )
 
 target_compile_definitions(mqttClient PRIVATE
