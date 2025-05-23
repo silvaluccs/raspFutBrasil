@@ -1,16 +1,43 @@
+#include "FreeRTOS.h"
+#include "pico/stdlib.h"
+#include "task.h"
+#include <stdio.h>
+
 #include "mqtt_connect.h"
 
-int main(void) {
-  stdio_init_all();
-  sleep_ms(5000);
+#define led_pin_red 12
 
-  // Inicializa o Wi-Fi
+void vMqttTask() {
+
+  while (true) {
+    cyw43_arch_poll();
+  }
+}
+
+// Trecho para modo BOOTSEL com botão B
+#include "pico/bootrom.h"
+#define botaoB 6
+void gpio_irq_handler(uint gpio, uint32_t events) { reset_usb_boot(0, 0); }
+
+int main() {
+  // TODO: modulazirar a inicialização do wifi
+  stdio_init_all();
+  // Para ser utilizado o modo BOOTSEL com botão B
+  gpio_init(botaoB);
+  gpio_set_dir(botaoB, GPIO_IN);
+  gpio_pull_up(botaoB);
+  gpio_set_irq_enabled_with_callback(botaoB, GPIO_IRQ_EDGE_FALL, true,
+                                     &gpio_irq_handler);
+  // Fim do trecho para modo BOOTSEL com botão B
+  //
+  //
   if (cyw43_arch_init()) {
     printf("Erro ao inicializar o Wi-Fi\n");
 
     return 1;
   }
 
+  //
   printf("MQTT Client Example\n");
   printf("Connecting to %s\n", WIFI_SSID);
   printf("MQTT Server: %s\n", MQTT_SERVER);
@@ -54,9 +81,10 @@ int main(void) {
     start_client(&state);
   }
 
-  while (true) {
-    cyw43_arch_poll();
-  }
-
-  return 0;
+  //  xTaskCreate(vBlinkTask, "Blink Task", configMINIMAL_STACK_SIZE, NULL,
+  //              tskIDLE_PRIORITY, NULL);
+  xTaskCreate(vMqttTask, "MQTT Task", configMINIMAL_STACK_SIZE, NULL,
+              tskIDLE_PRIORITY, NULL);
+  vTaskStartScheduler();
+  panic_unsupported();
 }
