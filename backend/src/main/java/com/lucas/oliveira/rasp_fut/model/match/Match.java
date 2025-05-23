@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 
 public class Match {
 
-  private final Team homeTeam;
-  private final Team awayTeam;
+  private Team homeTeam;
+  private Team awayTeam;
 
   private Integer homeScore;
   private Integer awayScore;
@@ -15,13 +15,27 @@ public class Match {
   private BigDecimal time;
   private String status;
 
-  public Match(Team homeTeam, Team awayTeam, Integer homeScore, Integer awayScore, String status, BigDecimal time) {
+  private String date;
+
+  public Match(Team homeTeam, Team awayTeam, Integer homeScore, Integer awayScore, String status, BigDecimal time,
+      String date) {
     this.homeTeam = homeTeam;
     this.awayTeam = awayTeam;
     this.homeScore = homeScore;
     this.awayScore = awayScore;
     this.status = status;
     this.time = time;
+    this.date = date;
+  }
+
+  public Match() {
+    this.homeTeam = null;
+    this.awayTeam = null;
+    this.homeScore = null;
+    this.awayScore = null;
+    this.status = null;
+    this.time = null;
+    this.date = null;
   }
 
   public boolean isFinished() {
@@ -54,6 +68,38 @@ public class Match {
 
   public String getStatus() {
     return this.status;
+  }
+
+  public String getDate() {
+    return this.date;
+  }
+
+  public void setDate(String date) {
+    this.date = date;
+  }
+
+  public void setHomeScore(Integer homeScore) {
+    this.homeScore = homeScore;
+  }
+
+  public void setAwayScore(Integer awayScore) {
+    this.awayScore = awayScore;
+  }
+
+  public void setTime(BigDecimal time) {
+    this.time = time;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public void setHomeTeam(Team homeTeam) {
+    this.homeTeam = homeTeam;
+  }
+
+  public void setAwayTeam(Team awayTeam) {
+    this.awayTeam = awayTeam;
   }
 
 }
