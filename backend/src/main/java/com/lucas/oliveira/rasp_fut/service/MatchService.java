@@ -5,11 +5,13 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lucas.oliveira.rasp_fut.model.match.Match;
+import com.lucas.oliveira.rasp_fut.model.match.MatchDTO;
 import com.lucas.oliveira.rasp_fut.model.team.Team;
 import com.lucas.oliveira.rasp_fut.proxy.api.WebFutebolClient;
 
@@ -24,7 +26,7 @@ public class MatchService {
 
   public List<Match> getMatches() {
 
-    JsonNode dataBrazilFootball = webFutebolClient.getFootballMatch();
+    JsonNode dataBrazilFootball = webFutebolClient.getFootballMatchs();
 
     JsonNode matchsNode = dataBrazilFootball.get("games");
 
@@ -70,6 +72,34 @@ public class MatchService {
     });
 
     return matchs;
+
+  }
+
+  public Optional<MatchDTO> getMatch(Long matchId) {
+
+    JsonNode matchStats = webFutebolClient.getFootballMatch(matchId);
+
+    if (!(matchStats.has("games"))) {
+      return Optional.ofNullable(null);
+    }
+
+    JsonNode matchNode = matchStats.get("games").get(0);
+
+    Long id = matchNode.get("id").asLong();
+
+    String homeTeam = matchNode.get("homeCompetitor").get("symbolicName").asText();
+    Integer homeScore = matchNode.get("homeCompetitor").get("score").asInt();
+
+    String awayTeam = matchNode.get("awayCompetitor").get("symbolicName").asText();
+    Integer awayScore = matchNode.get("awayCompetitor").get("score").asInt();
+
+    String status = matchNode.get("shortStatusText").asText();
+
+    String time = matchNode.get("gameTime").asText();
+
+    MatchDTO matchDTO = new MatchDTO(id, homeTeam, awayTeam, status, time.toString(), homeScore, awayScore);
+
+    return Optional.of(matchDTO);
 
   }
 
