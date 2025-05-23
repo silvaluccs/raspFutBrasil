@@ -1,6 +1,6 @@
 package com.lucas.oliveira.rasp_fut.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lucas.oliveira.rasp_fut.service.LedService;
@@ -14,13 +14,13 @@ public class LedController {
     this.ledService = ledService;
   }
 
-  @RequestMapping("/led/on")
+  @GetMapping("/led/on")
   public String turnOn() {
     String message = ledService.turnOn();
     return message;
   }
 
-  @RequestMapping("/led/off")
+  @GetMapping("/led/off")
   public String turnOff() {
 
     String message = ledService.turnOff();
