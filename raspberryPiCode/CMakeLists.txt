@@ -106,6 +106,7 @@ target_include_directories(mqttClient PRIVATE
 target_link_libraries(mqttClient 
         pico_cyw43_arch_lwip_threadsafe_background
         hardware_adc
+        hardware_i2c
         pico_multicore
         pico_lwip_mqtt
         pico_mbedtls

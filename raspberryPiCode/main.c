@@ -1,11 +1,53 @@
 #include "FreeRTOS.h"
+#include "font.h"
+#include "hardware/i2c.h"
+#include "mqtt_connect.h"
 #include "pico/stdlib.h"
+#include "ssd1306.h"
 #include "task.h"
 #include <stdio.h>
 
-#include "mqtt_connect.h"
-
 #define led_pin_red 12
+#define I2C_PORT i2c1
+#define I2C_SDA 14
+#define I2C_SCL 15
+#define endereco 0x3C
+
+typedef struct {
+  char time_casa[10];
+  char time_fora[10];
+  char placar_casa[3];
+  char placar_fora[3];
+  char tempo[6]; // ex: "78'", "FT", "HT"
+} Jogo;
+
+void formatar_placar(const Jogo *jogo, char *saida) {
+  // Exemplo: "ATL 2 x 1 FLU"
+  sprintf(saida, "%.3s %s x %s %.3s", jogo->time_casa, jogo->placar_casa,
+          jogo->placar_fora, jogo->time_fora);
+}
+
+void vDisplayTask() {
+  i2c_init(I2C_PORT, 100 * 1000);
+  gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
+  gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+  gpio_pull_up(I2C_SDA);
+  gpio_pull_up(I2C_SCL);
+
+  ssd1306_t ssd;
+  ssd1306_init(&ssd, WIDTH, HEIGHT, false, endereco, I2C_PORT);
+  ssd1306_config(&ssd);
+  ssd1306_send_data(&ssd);
+
+  bool cor = true;
+  while (true) {
+    ssd1306_fill(&ssd, !cor);
+    ssd1306_draw_string(&ssd, "ATL 2 x 1 FLU", 10, 13);
+    ssd1306_draw_string(&ssd, "TEMPO: 78'", 19, 25);
+    ssd1306_send_data(&ssd);
+    sleep_ms(1000);
+  }
+}
 
 void vMqttTask() {
 
@@ -14,23 +56,10 @@ void vMqttTask() {
   }
 }
 
-// Trecho para modo BOOTSEL com botão B
-#include "pico/bootrom.h"
-#define botaoB 6
-void gpio_irq_handler(uint gpio, uint32_t events) { reset_usb_boot(0, 0); }
-
 int main() {
   // TODO: modulazirar a inicialização do wifi
   stdio_init_all();
-  // Para ser utilizado o modo BOOTSEL com botão B
-  gpio_init(botaoB);
-  gpio_set_dir(botaoB, GPIO_IN);
-  gpio_pull_up(botaoB);
-  gpio_set_irq_enabled_with_callback(botaoB, GPIO_IRQ_EDGE_FALL, true,
-                                     &gpio_irq_handler);
-  // Fim do trecho para modo BOOTSEL com botão B
-  //
-  //
+
   if (cyw43_arch_init()) {
     printf("Erro ao inicializar o Wi-Fi\n");
 
@@ -83,8 +112,10 @@ int main() {
 
   //  xTaskCreate(vBlinkTask, "Blink Task", configMINIMAL_STACK_SIZE, NULL,
   //              tskIDLE_PRIORITY, NULL);
-  xTaskCreate(vMqttTask, "MQTT Task", configMINIMAL_STACK_SIZE, NULL,
-              tskIDLE_PRIORITY, NULL);
+  xTaskCreate(vMqttTask, "MQTT Task", 512, NULL, 1, NULL);
+
+  xTaskCreate(vDisplayTask, "Display Task", 512, NULL, 1, NULL);
+
   vTaskStartScheduler();
   panic_unsupported();
 }
