@@ -6,6 +6,7 @@
 #include "pico/stdlib.h"
 #include "ssd1306.h"
 #include "task.h"
+#include <lwip/apps/mqtt.h>
 #include <stdio.h>
 
 #define led_pin_red 12
@@ -15,6 +16,7 @@
 #define endereco 0x3C
 
 Jogo jogo;
+static MQTT_CLIENT_DATA_T state = {0};
 
 void formatar_placar(const Jogo *jogo, char *saida) {
 
@@ -44,6 +46,8 @@ void vDisplayTask() {
   bool cor = true;
 
   char buffer[20];
+  char buffer2[20];
+
   while (true) {
     ssd1306_fill(&ssd, !cor);
 
@@ -51,14 +55,20 @@ void vDisplayTask() {
 
     if (strcmp(buffer, "empty") == 0) {
       ssd1306_draw_string(&ssd, "Esperando jogo", 0, 25);
+
       ssd1306_send_data(&ssd);
+      // Publica uma mensagem indicando que está conectado
+      mqtt_publish(state.mqtt_client_inst, "/dados", "esperando jogo",
+                   strlen("esperando jogo"), 1, 10, NULL, NULL);
+
+      sleep_ms(10000);
       continue;
     }
+    ssd1306_draw_string(&ssd, buffer, 0, 10);
 
-    ssd1306_draw_string(&ssd, buffer, 10, 13);
-    ssd1306_draw_string(&ssd, "Tempo:", 19, 25);
-    ssd1306_draw_string(&ssd, jogo.tempo, 19, 27);
-
+    snprintf(buffer2, sizeof(buffer2), "Tempo: %s'", jogo.tempo);
+    ssd1306_draw_string(&ssd, buffer2, 0, 25);
+    printf("Status: %s\n", jogo.status);
     ssd1306_send_data(&ssd);
   }
 }
@@ -79,6 +89,7 @@ int main() {
   strcpy(jogo.placar_casa, "0");
   strcpy(jogo.placar_fora, "0");
   strcpy(jogo.tempo, "0");
+  strcpy(jogo.status, "0");
 
   if (cyw43_arch_init()) {
     printf("Erro ao inicializar o Wi-Fi\n");
@@ -86,7 +97,6 @@ int main() {
     return 1;
   }
 
-  static MQTT_CLIENT_DATA_T state = {0};
   state.mqtt_client_info.client_id = MQTT_DEVICE_NAME;
 
   cyw43_arch_enable_sta_mode();
