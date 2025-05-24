@@ -1,0 +1,14 @@
+CompileFlags:
+  Add:
+    - --target=arm-none-eabi
+    - --sysroot=/usr/arm-none-eabi
+    - -I/usr/lib/gcc/arm-none-eabi/14.2.0/include
+    - -I/usr/lib/gcc/arm-none-eabi/14.2.0/include-fixed
+    - -I/usr/lib/gcc/arm-none-eabi/14.2.0/../../../../arm-none-eabi/include
+    - -I~/embarcatech/pico-sdk/src
+    - -I~/embarcatech/pico-sdk/src/rp2_common
+    - -I~/embarcatech/pico-sdk/src/common
+    - -I~/embarcatech/pico-sdk/src/boards/include
+    - -I~/embarcatech/ic/mqttClient
+    - -I~/java/projeto-fut-placa/raspberryPiCode/include/
+
