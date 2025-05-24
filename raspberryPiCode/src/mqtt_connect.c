@@ -11,6 +11,10 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
 
   printf("Tópico: %s\n", state->topic);
 
+  if (strcmp(state->topic, "/jogo/status") == 0) {
+    strncpy(jogo.status, state->data, sizeof(jogo.status));
+  }
+
   if (strcmp(state->topic, "/jogo/time_casa") == 0) {
     strncpy(jogo.time_casa, state->data, sizeof(jogo.time_casa));
   }
@@ -51,6 +55,8 @@ void mqtt_connection_cb(mqtt_client_t *client, void *arg,
     mqtt_sub_unsub(state->mqtt_client_inst, "/jogo/placar_fora", 1, NULL, state,
                    1);
     mqtt_sub_unsub(state->mqtt_client_inst, "/jogo/tempo", 1, NULL, state, 1);
+
+    mqtt_sub_unsub(state->mqtt_client_inst, "/jogo/status", 1, NULL, state, 1);
 
     // Publica uma mensagem indicando que está conectado
     mqtt_publish(state->mqtt_client_inst, "/log", "Conectado ao MQTT",

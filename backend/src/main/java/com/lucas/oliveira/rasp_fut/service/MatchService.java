@@ -93,9 +93,10 @@ public class MatchService {
     String awayTeam = matchNode.get("awayCompetitor").get("symbolicName").asText();
     Integer awayScore = matchNode.get("awayCompetitor").get("score").asInt();
 
-    String status = matchNode.get("shortStatusText").asText();
+    String status = matchNode.get("statusText").asText();
 
-    String time = matchNode.get("gameTime").asText();
+    Integer timeInt = matchNode.get("gameTime").asInt();
+    String time = String.valueOf(timeInt);
 
     MatchDTO matchDTO = new MatchDTO(id, homeTeam, awayTeam, status, time.toString(), homeScore, awayScore);
 
