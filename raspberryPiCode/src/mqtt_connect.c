@@ -1,7 +1,12 @@
 #include "mqtt_connect.h"
+#include "cJSON.h"
 #include "jogo_dados.h"
 #include <lwip/apps/mqtt.h>
 #include <stdio.h>
+
+Jogo jogos[MAXIMO_JOGOS];
+
+int total_jogos = 0;
 
 void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
   MQTT_CLIENT_DATA_T *state = (MQTT_CLIENT_DATA_T *)arg;
@@ -9,26 +14,46 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
   strncpy(state->data, (const char *)data, len);
   state->data[len] = '\0';
 
+  if (strcmp(state->topic, "/jogos") == 0) {
+
+    cJSON *jsonData = cJSON_Parse(state->data);
+
+    if (!jsonData) {
+      mqtt_publish(state->mqtt_client_inst, "/log", "Erro ao analisar o JSON",
+                   strlen("Erro ao analisar o JSON"), 1, 0, NULL, NULL);
+      return;
+    }
+
+    if (!cJSON_IsArray(jsonData)) {
+      mqtt_publish(state->mqtt_client_inst, "/log", "JSON inválido",
+                   strlen("JSON inválido"), 1, 0, NULL, NULL);
+      return;
+    }
+
+    uint size = cJSON_GetArraySize(jsonData);
+
+    for (uint i = 0; i < size; i++) {
+
+      cJSON *jogo = cJSON_GetArrayItem(jsonData, i);
+
+      cJSON *time_casa = cJSON_GetObjectItem(jogo, "home team");
+      cJSON *time_fora = cJSON_GetObjectItem(jogo, "away team");
+      cJSON *placar_casa = cJSON_GetObjectItem(jogo, "home score");
+      cJSON *placar_fora = cJSON_GetObjectItem(jogo, "away score");
+      cJSON *status = cJSON_GetObjectItem(jogo, "status");
+      cJSON *tempo = cJSON_GetObjectItem(jogo, "time");
+
+      strcpy(jogos[i].time_casa, time_casa->valuestring);
+      strcpy(jogos[i].time_fora, time_fora->valuestring);
+      strcpy(jogos[i].placar_casa, placar_casa->valuestring);
+      strcpy(jogos[i].placar_fora, placar_fora->valuestring);
+      strcpy(jogos[i].tempo, tempo->valuestring);
+      strcpy(jogos[i].status, status->valuestring);
+      total_jogos++;
+    }
+  }
+
   printf("Tópico: %s\n", state->topic);
-
-  if (strcmp(state->topic, "/jogo/time_casa") == 0) {
-    strncpy(jogo.time_casa, state->data, sizeof(jogo.time_casa));
-  }
-  if (strcmp(state->topic, "/jogo/time_fora") == 0) {
-    strncpy(jogo.time_fora, state->data, sizeof(jogo.time_fora));
-  }
-
-  if (strcmp(state->topic, "/jogo/placar_casa") == 0) {
-    strncpy(jogo.placar_casa, state->data, sizeof(jogo.placar_casa));
-  }
-
-  if (strcmp(state->topic, "/jogo/placar_fora") == 0) {
-    strncpy(jogo.placar_fora, state->data, sizeof(jogo.placar_fora));
-  }
-
-  if (strcmp(state->topic, "/jogo/tempo") == 0) {
-    strncpy(jogo.tempo, state->data, sizeof(jogo.tempo));
-  }
 }
 
 void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len) {
@@ -42,19 +67,11 @@ void mqtt_connection_cb(mqtt_client_t *client, void *arg,
   if (status == MQTT_CONNECT_ACCEPTED) {
     state->connect_done = true;
 
-    mqtt_sub_unsub(state->mqtt_client_inst, "/jogo/time_casa", 1, NULL, state,
-                   1);
-    mqtt_sub_unsub(state->mqtt_client_inst, "/jogo/time_fora", 1, NULL, state,
-                   1);
-    mqtt_sub_unsub(state->mqtt_client_inst, "/jogo/placar_casa", 1, NULL, state,
-                   1);
-    mqtt_sub_unsub(state->mqtt_client_inst, "/jogo/placar_fora", 1, NULL, state,
-                   1);
-    mqtt_sub_unsub(state->mqtt_client_inst, "/jogo/tempo", 1, NULL, state, 1);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/jogos", 1, NULL, state, 1);
 
     // Publica uma mensagem indicando que está conectado
     mqtt_publish(state->mqtt_client_inst, "/log", "Conectado ao MQTT",
-                 strlen("Conectado ao MQTT"), 0, 0, NULL, NULL);
+                 strlen("Conectado ao MQTT"), 1, 0, NULL, NULL);
   }
 }
 

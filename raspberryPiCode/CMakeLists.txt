@@ -36,11 +36,14 @@ project(mqttClient C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+#add_subdirectory(cJSON)
+
 # Add executable. Default name is the project name, version 0.1
 file(GLOB INCLUDES_FILES "includes/*.h")
 file(GLOB SOURCES_FILES "src/*.c")
 add_executable(mqttClient main.c 
     ${INCLUDES_FILES}
+    cJSON/cJSON.c
     ${SOURCES_FILES}
 )
 
@@ -98,6 +101,7 @@ target_link_libraries(mqttClient
 # Add the standard include files to the build
 target_include_directories(mqttClient PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/cJSON
         ${CMAKE_CURRENT_LIST_DIR}/includes
         ${CMAKE_CURRENT_LIST_DIR}/..
 )

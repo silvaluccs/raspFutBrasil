@@ -47,19 +47,47 @@ void vDisplayTask() {
   while (true) {
     ssd1306_fill(&ssd, !cor);
 
-    formatar_placar(&jogo, buffer);
-
-    if (strcmp(buffer, "empty") == 0) {
-      ssd1306_draw_string(&ssd, "Esperando jogo", 0, 25);
+    if (total_jogos != MAXIMO_JOGOS) {
+      ssd1306_draw_string(&ssd, "Esperando jogos", 0, 25);
       ssd1306_send_data(&ssd);
+      sleep_ms(10000);
       continue;
     }
 
-    ssd1306_draw_string(&ssd, buffer, 10, 13);
-    ssd1306_draw_string(&ssd, "Tempo:", 19, 25);
-    ssd1306_draw_string(&ssd, jogo.tempo, 19, 27);
+    char buffer[20];
+    for (int i = 0; i < MAXIMO_JOGOS; i++) {
 
-    ssd1306_send_data(&ssd);
+      formatar_placar(&jogos[i], buffer);
+      ssd1306_draw_string(&ssd, buffer, 10, 13);
+      ssd1306_draw_string(&ssd, jogos[i].status, 19, 27);
+
+      ssd1306_send_data(&ssd);
+      sleep_ms(5000);
+    }
+  }
+}
+
+void mostrarJogo(int id, ssd1306_t *ssd) {
+
+  bool cor = true;
+
+  char buffer[20];
+  while (true) {
+    ssd1306_fill(ssd, !cor);
+
+    formatar_placar(&jogo, buffer);
+
+    if (strcmp(buffer, "empty") == 0) {
+      ssd1306_draw_string(ssd, "Esperando jogo", 0, 25);
+      ssd1306_send_data(ssd);
+      continue;
+    }
+
+    ssd1306_draw_string(ssd, buffer, 10, 13);
+    ssd1306_draw_string(ssd, "Tempo:", 19, 25);
+    ssd1306_draw_string(ssd, jogo.tempo, 19, 27);
+
+    ssd1306_send_data(ssd);
   }
 }
 
