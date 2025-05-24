@@ -43,8 +43,6 @@ typedef struct {
     bool connect_done;
 } MQTT_CLIENT_DATA_T;
 
-void control_led(bool on);
-
 void mqtt_incoming_data_cb(void* arg, const u8_t* data, u16_t len,
     u8_t flags);
 

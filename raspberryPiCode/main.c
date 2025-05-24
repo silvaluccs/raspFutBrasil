@@ -1,6 +1,7 @@
 #include "FreeRTOS.h"
 #include "font.h"
 #include "hardware/i2c.h"
+#include "jogo_dados.h"
 #include "mqtt_connect.h"
 #include "pico/stdlib.h"
 #include "ssd1306.h"
@@ -13,16 +14,17 @@
 #define I2C_SCL 15
 #define endereco 0x3C
 
-typedef struct {
-  char time_casa[10];
-  char time_fora[10];
-  char placar_casa[3];
-  char placar_fora[3];
-  char tempo[6]; // ex: "78'", "FT", "HT"
-} Jogo;
+Jogo jogo;
 
 void formatar_placar(const Jogo *jogo, char *saida) {
-  // Exemplo: "ATL 2 x 1 FLU"
+
+  if (strcmp(jogo->time_casa, "0") == 0 && strcmp(jogo->time_fora, "0") == 0 &&
+      strcmp(jogo->placar_casa, "0") == 0 &&
+      strcmp(jogo->placar_fora, "0") == 0 && strcmp(jogo->tempo, "0") == 0) {
+    sprintf(saida, "empty");
+    return;
+  }
+
   sprintf(saida, "%.3s %s x %s %.3s", jogo->time_casa, jogo->placar_casa,
           jogo->placar_fora, jogo->time_fora);
 }
@@ -40,12 +42,24 @@ void vDisplayTask() {
   ssd1306_send_data(&ssd);
 
   bool cor = true;
+
+  char buffer[20];
   while (true) {
     ssd1306_fill(&ssd, !cor);
-    ssd1306_draw_string(&ssd, "ATL 2 x 1 FLU", 10, 13);
-    ssd1306_draw_string(&ssd, "TEMPO: 78'", 19, 25);
+
+    formatar_placar(&jogo, buffer);
+
+    if (strcmp(buffer, "empty") == 0) {
+      ssd1306_draw_string(&ssd, "Esperando jogo", 0, 25);
+      ssd1306_send_data(&ssd);
+      continue;
+    }
+
+    ssd1306_draw_string(&ssd, buffer, 10, 13);
+    ssd1306_draw_string(&ssd, "Tempo:", 19, 25);
+    ssd1306_draw_string(&ssd, jogo.tempo, 19, 27);
+
     ssd1306_send_data(&ssd);
-    sleep_ms(1000);
   }
 }
 
@@ -60,30 +74,17 @@ int main() {
   // TODO: modulazirar a inicialização do wifi
   stdio_init_all();
 
+  strcpy(jogo.time_casa, "0");
+  strcpy(jogo.time_fora, "0");
+  strcpy(jogo.placar_casa, "0");
+  strcpy(jogo.placar_fora, "0");
+  strcpy(jogo.tempo, "0");
+
   if (cyw43_arch_init()) {
     printf("Erro ao inicializar o Wi-Fi\n");
 
     return 1;
   }
-
-  //
-  printf("MQTT Client Example\n");
-  printf("Connecting to %s\n", WIFI_SSID);
-  printf("MQTT Server: %s\n", MQTT_SERVER);
-  printf("Device Name: %s\n", MQTT_USERNAME);
-  printf("LED Pin: %d\n", LED_PIN);
-
-  gpio_init(LED_PIN);
-  gpio_set_dir(LED_PIN, GPIO_OUT);
-  gpio_put(LED_PIN, 0);
-
-  gpio_init(LED_RED_PIN);
-  gpio_set_dir(LED_RED_PIN, GPIO_OUT);
-  gpio_put(LED_RED_PIN, 0);
-
-  gpio_init(LED_GREEN_PIN);
-  gpio_set_dir(LED_GREEN_PIN, GPIO_OUT);
-  gpio_put(LED_GREEN_PIN, 0);
 
   static MQTT_CLIENT_DATA_T state = {0};
   state.mqtt_client_info.client_id = MQTT_DEVICE_NAME;
