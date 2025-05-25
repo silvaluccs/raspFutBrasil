@@ -22,7 +22,7 @@ public class MqttConfig {
   }
 
   @Bean
-  public DefaultMqttPahoClientFactory mqttClientFactory() {
+  DefaultMqttPahoClientFactory mqttClientFactory() {
     MqttConnectOptions options = new MqttConnectOptions();
     options.setServerURIs(new String[] { mqttProperties.getBrokerUrl() });
     options.setUserName(mqttProperties.getUsername());
@@ -37,27 +37,27 @@ public class MqttConfig {
   }
 
   @Bean
-  public MessageChannel mqttOutboundChannel() {
+  MessageChannel mqttOutboundChannel() {
     return new DirectChannel();
   }
 
   @Bean
   @ServiceActivator(inputChannel = "mqttOutboundChannel")
-  public MessageHandler mqttOutbound() {
+  MessageHandler mqttOutbound() {
     MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler(mqttProperties.getClientId(),
         mqttClientFactory());
     messageHandler.setAsync(true);
-    messageHandler.setDefaultTopic("/led");
+    messageHandler.setDefaultTopic("/times");
     return messageHandler;
   }
 
   @Bean
-  public MessageChannel mqttInboundChannel() {
+  MessageChannel mqttInboundChannel() {
     return new DirectChannel();
   }
 
   @Bean
-  public MessageProducer mqttInbound() {
+  MessageProducer mqttInbound() {
     MqttPahoMessageDrivenChannelAdapter adapter = new MqttPahoMessageDrivenChannelAdapter(
         mqttProperties.getClientId() + "-inbound",
         mqttClientFactory(),

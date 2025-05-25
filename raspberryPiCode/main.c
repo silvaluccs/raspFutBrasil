@@ -6,6 +6,7 @@
 #include "pico/stdlib.h"
 #include "ssd1306.h"
 #include "task.h"
+#include <lwip/apps/mqtt.h>
 #include <stdio.h>
 
 #define led_pin_red 12
@@ -15,6 +16,7 @@
 #define endereco 0x3C
 
 Jogo jogo;
+static MQTT_CLIENT_DATA_T state = {0};
 
 void formatar_placar(const Jogo *jogo, char *saida) {
 
@@ -44,6 +46,7 @@ void vDisplayTask() {
   bool cor = true;
 
   char buffer[20];
+
   while (true) {
     ssd1306_fill(&ssd, !cor);
 
@@ -107,6 +110,7 @@ int main() {
   strcpy(jogo.placar_casa, "0");
   strcpy(jogo.placar_fora, "0");
   strcpy(jogo.tempo, "0");
+  strcpy(jogo.status, "0");
 
   if (cyw43_arch_init()) {
     printf("Erro ao inicializar o Wi-Fi\n");
@@ -114,7 +118,6 @@ int main() {
     return 1;
   }
 
-  static MQTT_CLIENT_DATA_T state = {0};
   state.mqtt_client_info.client_id = MQTT_DEVICE_NAME;
 
   cyw43_arch_enable_sta_mode();

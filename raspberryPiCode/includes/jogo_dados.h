@@ -9,6 +9,7 @@ typedef struct {
     char placar_fora[3];
     char tempo[6]; // ex: "78'", "FT", "HT"
     char status[25];
+
 } Jogo;
 
 extern Jogo jogo;
