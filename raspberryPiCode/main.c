@@ -43,9 +43,9 @@ void vDisplayTask() {
     for (int i = 0; i <= index_dados; i++) {
       if (jogos[i].tem_dados == true) {
 
-        ssd1306_draw_string(&ssd, jogos[i].status, 0, 0);
-        ssd1306_draw_string(&ssd, jogos[i].time_casa, 0, 10);
-        ssd1306_draw_string(&ssd, jogos[i].time_fora, 0, 20);
+        formatar_placar(&jogos[i], buffer);
+        ssd1306_draw_string(&ssd, buffer, 10, 13);
+        ssd1306_draw_string(&ssd, jogos[i].status, 19, 25);
       }
 
       ssd1306_send_data(&ssd);
