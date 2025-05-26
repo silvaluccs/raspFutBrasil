@@ -39,6 +39,8 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     strcpy(jogos[index_dados].placar_fora, placar_fora->valuestring);
 
     cJSON_Delete(jsonData);
+
+    ++total_jogos;
     if (index_dados == 8) {
       index_dados = 0;
       return;
