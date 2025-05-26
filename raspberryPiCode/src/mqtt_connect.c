@@ -26,12 +26,19 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     cJSON *status = cJSON_GetObjectItemCaseSensitive(jsonData, "status");
     cJSON *time_casa = cJSON_GetObjectItemCaseSensitive(jsonData, "time_casa");
     cJSON *time_fora = cJSON_GetObjectItemCaseSensitive(jsonData, "time_fora");
+    cJSON *placar_casa =
+        cJSON_GetObjectItemCaseSensitive(jsonData, "placar_casa");
+    cJSON *placar_fora =
+        cJSON_GetObjectItemCaseSensitive(jsonData, "placar_fora");
 
     jogos[index_dados].tem_dados = true;
     strcpy(jogos[index_dados].status, status->valuestring);
     strcpy(jogos[index_dados].time_casa, time_casa->valuestring);
     strcpy(jogos[index_dados].time_fora, time_fora->valuestring);
+    strcpy(jogos[index_dados].placar_casa, placar_casa->valuestring);
+    strcpy(jogos[index_dados].placar_fora, placar_fora->valuestring);
 
+    cJSON_Delete(jsonData);
     if (index_dados == 8) {
       index_dados = 0;
       return;

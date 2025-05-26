@@ -65,6 +65,13 @@ public class MqttMessageHandler {
     map.put("time_casa", matchDTOs.get(index).homeTeam());
     map.put("time_fora", matchDTOs.get(index).awayTeam());
 
+    String placarCasa, placarFora;
+    placarCasa = String.valueOf(matchDTOs.get(index).homeScore());
+    placarFora = String.valueOf(matchDTOs.get(index).awayScore());
+
+    map.put("placar_casa", placarCasa);
+    map.put("placar_fora", placarFora);
+
     String json = objectMapper.writeValueAsString(map);
 
     mqttPublisher.sendMessage("/jogos", json);
