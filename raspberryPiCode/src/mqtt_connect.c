@@ -8,6 +8,7 @@ Jogo jogos[MAXIMO_JOGOS];
 
 int index_dados = 0;
 int total_jogos = 0;
+char buffer[10];
 
 void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
   MQTT_CLIENT_DATA_T *state = (MQTT_CLIENT_DATA_T *)arg;
@@ -26,13 +27,21 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     cJSON *time_casa = cJSON_GetObjectItemCaseSensitive(jsonData, "time_casa");
     cJSON *time_fora = cJSON_GetObjectItemCaseSensitive(jsonData, "time_fora");
 
-    jogos[0].tem_dados = true;
-    strcpy(jogos[0].status, status->valuestring);
-    strcpy(jogos[0].time_casa, time_casa->valuestring);
-    strcpy(jogos[0].time_fora, time_fora->valuestring);
+    jogos[index_dados].tem_dados = true;
+    strcpy(jogos[index_dados].status, status->valuestring);
+    strcpy(jogos[index_dados].time_casa, time_casa->valuestring);
+    strcpy(jogos[index_dados].time_fora, time_fora->valuestring);
 
-    mqtt_publish(state->mqtt_client_inst, "/log", "dados recebidos",
-                 strlen("dados recebidos"), 0, 100, NULL, NULL);
+    if (index_dados == 8) {
+      index_dados = 0;
+      return;
+    } else {
+      index_dados++;
+    }
+
+    sprintf(buffer, "%d", index_dados);
+    mqtt_publish(state->mqtt_client_inst, "/dados", buffer, strlen(buffer), 0,
+                 100, NULL, NULL);
   }
 
   printf("Tópico: %s\n", state->topic);

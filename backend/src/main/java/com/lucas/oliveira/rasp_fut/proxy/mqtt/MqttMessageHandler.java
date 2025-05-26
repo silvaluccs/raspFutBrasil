@@ -59,9 +59,11 @@ public class MqttMessageHandler {
 
     Map<String, Object> map = new HashMap<>();
 
-    map.put("status", matchDTOs.get(0).status());
-    map.put("time_casa", matchDTOs.get(0).homeTeam());
-    map.put("time_fora", matchDTOs.get(0).awayTeam());
+    Integer index = Integer.parseInt(payload);
+
+    map.put("status", matchDTOs.get(index).status());
+    map.put("time_casa", matchDTOs.get(index).homeTeam());
+    map.put("time_fora", matchDTOs.get(index).awayTeam());
 
     String json = objectMapper.writeValueAsString(map);
 

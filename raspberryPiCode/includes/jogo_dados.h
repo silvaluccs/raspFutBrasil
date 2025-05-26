@@ -17,5 +17,6 @@ typedef struct {
 extern Jogo jogo;
 extern Jogo jogos[MAXIMO_JOGOS];
 extern int total_jogos;
+extern int index_dados;
 
 #endif

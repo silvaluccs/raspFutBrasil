@@ -40,15 +40,17 @@ void vDisplayTask() {
     ssd1306_fill(&ssd, !cor);
     ssd1306_draw_string(&ssd, "oi", 0, 0);
 
-    if (jogos[0].tem_dados == true) {
+    for (int i = 0; i <= index_dados; i++) {
+      if (jogos[i].tem_dados == true) {
 
-      ssd1306_draw_string(&ssd, jogos[0].status, 0, 0);
-      ssd1306_draw_string(&ssd, jogos[0].time_casa, 0, 10);
-      ssd1306_draw_string(&ssd, jogos[0].time_fora, 0, 20);
+        ssd1306_draw_string(&ssd, jogos[i].status, 0, 0);
+        ssd1306_draw_string(&ssd, jogos[i].time_casa, 0, 10);
+        ssd1306_draw_string(&ssd, jogos[i].time_fora, 0, 20);
+      }
+
+      ssd1306_send_data(&ssd);
+      sleep_ms(1000);
     }
-
-    ssd1306_send_data(&ssd);
-    sleep_ms(1000);
   }
 }
 
