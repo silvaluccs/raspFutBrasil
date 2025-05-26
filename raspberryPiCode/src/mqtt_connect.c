@@ -6,6 +6,7 @@
 
 Jogo jogos[MAXIMO_JOGOS];
 
+int index_dados = 0;
 int total_jogos = 0;
 
 void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
@@ -18,39 +19,20 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
 
     cJSON *jsonData = cJSON_Parse(state->data);
 
-    if (!jsonData) {
-      mqtt_publish(state->mqtt_client_inst, "/log", "Erro ao analisar o JSON",
-                   strlen("Erro ao analisar o JSON"), 1, 0, NULL, NULL);
-      return;
-    }
+    mqtt_publish(state->mqtt_client_inst, "/log", "chegou", strlen("chegou"), 0,
+                 100, NULL, NULL);
 
-    if (!cJSON_IsArray(jsonData)) {
-      mqtt_publish(state->mqtt_client_inst, "/log", "JSON inválido",
-                   strlen("JSON inválido"), 1, 0, NULL, NULL);
-      return;
-    }
+    cJSON *status = cJSON_GetObjectItemCaseSensitive(jsonData, "status");
+    cJSON *time_casa = cJSON_GetObjectItemCaseSensitive(jsonData, "time_casa");
+    cJSON *time_fora = cJSON_GetObjectItemCaseSensitive(jsonData, "time_fora");
 
-    uint size = cJSON_GetArraySize(jsonData);
+    jogos[0].tem_dados = true;
+    strcpy(jogos[0].status, status->valuestring);
+    strcpy(jogos[0].time_casa, time_casa->valuestring);
+    strcpy(jogos[0].time_fora, time_fora->valuestring);
 
-    for (uint i = 0; i < size; i++) {
-
-      cJSON *jogo = cJSON_GetArrayItem(jsonData, i);
-
-      cJSON *time_casa = cJSON_GetObjectItem(jogo, "home team");
-      cJSON *time_fora = cJSON_GetObjectItem(jogo, "away team");
-      cJSON *placar_casa = cJSON_GetObjectItem(jogo, "home score");
-      cJSON *placar_fora = cJSON_GetObjectItem(jogo, "away score");
-      cJSON *status = cJSON_GetObjectItem(jogo, "status");
-      cJSON *tempo = cJSON_GetObjectItem(jogo, "time");
-
-      strcpy(jogos[i].time_casa, time_casa->valuestring);
-      strcpy(jogos[i].time_fora, time_fora->valuestring);
-      strcpy(jogos[i].placar_casa, placar_casa->valuestring);
-      strcpy(jogos[i].placar_fora, placar_fora->valuestring);
-      strcpy(jogos[i].tempo, tempo->valuestring);
-      strcpy(jogos[i].status, status->valuestring);
-      total_jogos++;
-    }
+    mqtt_publish(state->mqtt_client_inst, "/log", "dados recebidos",
+                 strlen("dados recebidos"), 0, 100, NULL, NULL);
   }
 
   printf("Tópico: %s\n", state->topic);
@@ -71,7 +53,7 @@ void mqtt_connection_cb(mqtt_client_t *client, void *arg,
 
     // Publica uma mensagem indicando que está conectado
     mqtt_publish(state->mqtt_client_inst, "/log", "Conectado ao MQTT",
-                 strlen("Conectado ao MQTT"), 1, 0, NULL, NULL);
+                 strlen("Conectado ao MQTT"), 0, 0, NULL, NULL);
   }
 }
 

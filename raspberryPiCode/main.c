@@ -1,5 +1,6 @@
 #include "FreeRTOS.h"
 #include "font.h"
+#include "formatar.h"
 #include "hardware/i2c.h"
 #include "jogo_dados.h"
 #include "mqtt_connect.h"
@@ -18,19 +19,6 @@
 Jogo jogo;
 static MQTT_CLIENT_DATA_T state = {0};
 
-void formatar_placar(const Jogo *jogo, char *saida) {
-
-  if (strcmp(jogo->time_casa, "0") == 0 && strcmp(jogo->time_fora, "0") == 0 &&
-      strcmp(jogo->placar_casa, "0") == 0 &&
-      strcmp(jogo->placar_fora, "0") == 0 && strcmp(jogo->tempo, "0") == 0) {
-    sprintf(saida, "empty");
-    return;
-  }
-
-  sprintf(saida, "%.3s %s x %s %.3s", jogo->time_casa, jogo->placar_casa,
-          jogo->placar_fora, jogo->time_fora);
-}
-
 void vDisplayTask() {
   i2c_init(I2C_PORT, 100 * 1000);
   gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
@@ -48,25 +36,19 @@ void vDisplayTask() {
   char buffer[20];
 
   while (true) {
+
     ssd1306_fill(&ssd, !cor);
+    ssd1306_draw_string(&ssd, "oi", 0, 0);
 
-    if (total_jogos != MAXIMO_JOGOS) {
-      ssd1306_draw_string(&ssd, "Esperando jogos", 0, 25);
-      ssd1306_send_data(&ssd);
-      sleep_ms(10000);
-      continue;
+    if (jogos[0].tem_dados == true) {
+
+      ssd1306_draw_string(&ssd, jogos[0].status, 0, 0);
+      ssd1306_draw_string(&ssd, jogos[0].time_casa, 0, 10);
+      ssd1306_draw_string(&ssd, jogos[0].time_fora, 0, 20);
     }
 
-    char buffer[20];
-    for (int i = 0; i < MAXIMO_JOGOS; i++) {
-
-      formatar_placar(&jogos[i], buffer);
-      ssd1306_draw_string(&ssd, buffer, 10, 13);
-      ssd1306_draw_string(&ssd, jogos[i].status, 19, 27);
-
-      ssd1306_send_data(&ssd);
-      sleep_ms(5000);
-    }
+    ssd1306_send_data(&ssd);
+    sleep_ms(1000);
   }
 }
 
@@ -110,7 +92,7 @@ int main() {
   strcpy(jogo.placar_casa, "0");
   strcpy(jogo.placar_fora, "0");
   strcpy(jogo.tempo, "0");
-  strcpy(jogo.status, "0");
+  strcpy(jogo.status, "esperando");
 
   if (cyw43_arch_init()) {
     printf("Erro ao inicializar o Wi-Fi\n");

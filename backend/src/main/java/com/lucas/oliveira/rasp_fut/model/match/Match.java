@@ -16,6 +16,7 @@ public class Match {
   private String status;
 
   private String date;
+  private String hour;
 
   public Match(Team homeTeam, Team awayTeam, Integer homeScore, Integer awayScore, String status, BigDecimal time,
       String date) {
@@ -76,6 +77,14 @@ public class Match {
 
   public void setDate(String date) {
     this.date = date;
+  }
+
+  public void setHour(String hour) {
+    this.hour = hour;
+  }
+
+  public String getHour() {
+    return this.hour;
   }
 
   public void setHomeScore(Integer homeScore) {

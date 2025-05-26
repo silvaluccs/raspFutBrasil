@@ -44,8 +44,10 @@ public class MatchService {
       OffsetDateTime offsetDateTime = OffsetDateTime.parse(date);
 
       String dateFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-      match.setDate(dateFormat);
+      String timeFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
+      match.setDate(dateFormat);
+      match.setHour(timeFormat);
       JsonNode homeTeamNode = matchNode.get("homeCompetitor");
       JsonNode awayTeamNode = matchNode.get("awayCompetitor");
 
@@ -98,7 +100,7 @@ public class MatchService {
     Integer timeInt = matchNode.get("gameTime").asInt();
     String time = String.valueOf(timeInt);
 
-    MatchDTO matchDTO = new MatchDTO(id, homeTeam, awayTeam, status, time.toString(), homeScore, awayScore);
+    MatchDTO matchDTO = new MatchDTO(homeTeam, awayTeam, status, time.toString(), homeScore, awayScore, "", "");
 
     return Optional.of(matchDTO);
 

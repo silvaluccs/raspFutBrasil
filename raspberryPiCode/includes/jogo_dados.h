@@ -1,6 +1,7 @@
 #ifndef JOGO_DADOS_H
 #define JOGO_DADOS_H
 
+#include "stdbool.h"
 #define MAXIMO_JOGOS 9
 typedef struct {
     char time_casa[10];
@@ -9,6 +10,7 @@ typedef struct {
     char placar_fora[3];
     char tempo[6]; // ex: "78'", "FT", "HT"
     char status[25];
+    bool tem_dados;
 
 } Jogo;
 
