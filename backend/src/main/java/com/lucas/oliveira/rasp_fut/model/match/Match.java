@@ -99,6 +99,10 @@ public class Match {
     this.time = time;
   }
 
+  public void setTime(Integer time) {
+    this.time = BigDecimal.valueOf(time);
+  }
+
   public void setStatus(String status) {
     this.status = status;
   }

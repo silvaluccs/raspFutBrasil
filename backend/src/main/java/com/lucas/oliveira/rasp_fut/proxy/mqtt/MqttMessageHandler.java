@@ -64,7 +64,8 @@ public class MqttMessageHandler {
 
     if (topic.equals("/dados_tempo")) {
 
-      map.put("tempo_partida", matchDTOs.get(index).time());
+      Integer tempoPartida = Integer.parseInt(matchDTOs.get(index).time());
+      map.put("tempo_partida", tempoPartida);
       map.put("data_partida", matchDTOs.get(index).date());
       map.put("horario_partida", matchDTOs.get(index).hour());
 

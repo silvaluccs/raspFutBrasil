@@ -36,13 +36,14 @@ public class MatchService {
 
       Match match = new Match();
 
-      BigDecimal time = matchNode.get("gameTime").decimalValue();
+      Integer time = matchNode.get("gameTime").asInt();
 
       match.setTime(time);
       match.setStatus(matchNode.get("shortStatusText").asText());
       String date = matchNode.get("startTime").asText();
       OffsetDateTime offsetDateTime = OffsetDateTime.parse(date);
-      String dateFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+
+      String dateFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
       String timeFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
       match.setDate(dateFormat);
