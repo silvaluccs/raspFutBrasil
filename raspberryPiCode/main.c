@@ -108,19 +108,45 @@ void vDisplayTask() {
     ssd1306_fill(&ssd, !cor);
 
     if (total_jogos < 8 && menu == PARTIDAS) {
-      ssd1306_draw_string(&ssd, "esperando jogos", 5, 20);
-      ssd1306_send_data(&ssd);
+
+      int iterador = 0;
+      while (total_jogos < 8) {
+        char str[50] = "carregando [";
+        int pontos = iterador % 3;
+
+        for (int j = 0; j < pontos; j++) {
+          strcat(str, ".");
+        }
+
+        strcat(str, "]   ");
+
+        ssd1306_draw_string(&ssd, str, 5, 20);
+
+        ssd1306_send_data(&ssd);
+        iterador++;
+      }
+
       continue;
     }
 
     if (menu == PARTIDA) {
 
-      if (tamanho_tempo == 0) {
-        ssd1306_draw_string(&ssd, "sem dados", 5, 20);
-        ssd1306_send_data(&ssd);
-        continue;
-      }
+      int iterador = 0;
+      while (tamanho_tempo == 0) {
+        char str[50] = "carregando [";
+        int pontos = iterador % 3;
 
+        for (int j = 0; j < pontos; j++) {
+          strcat(str, ".");
+        }
+
+        strcat(str, "]   ");
+
+        ssd1306_draw_string(&ssd, str, 5, 20);
+
+        ssd1306_send_data(&ssd);
+        iterador++;
+      }
       ssd1306_draw_string(&ssd, tempos[0].data_partida, 5, 20);
       ssd1306_draw_string(&ssd, tempos[0].horario_partida, 5, 40);
       ssd1306_send_data(&ssd);
