@@ -8,7 +8,6 @@ typedef struct {
     char time_fora[10];
     char placar_casa[3];
     char placar_fora[3];
-    char tempo[6]; // ex: "78'", "FT", "HT"
     char status[25];
     bool tem_dados;
 

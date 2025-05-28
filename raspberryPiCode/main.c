@@ -1,4 +1,5 @@
 #include "FreeRTOS.h"
+#include "debouce.h"
 #include "font.h"
 #include "formatar.h"
 #include "hardware/i2c.h"
@@ -26,11 +27,59 @@
 #define PINO_JOYSTICK_X 27
 #define PINO_JOYSTICK_Y 26
 
+#define PINO_BOTAO_B 6
+#define PINO_BOTAO_A 5
+
 Jogo jogo;
 static MQTT_CLIENT_DATA_T state = {0};
 MENUS menu;
 
+static uint32_t ultimo_tempo = 0;
+
 int cursor = 0;
+
+void gpio_irq_handler(uint gpio, uint32_t events) {
+
+  if (!debouce(&ultimo_tempo)) {
+    return;
+  }
+
+  char buffer[20];
+  if (gpio == PINO_BOTAO_B) {
+    if (menu == PARTIDA) {
+      return;
+    }
+
+    total_jogos = 0;
+    menu = PARTIDA;
+
+    strcpy(jogo.status, jogos[cursor].status);
+    strcpy(jogo.time_casa, jogos[cursor].time_casa);
+    strcpy(jogo.time_fora, jogos[cursor].time_fora);
+    strcpy(jogo.placar_casa, jogos[cursor].placar_casa);
+    strcpy(jogo.placar_fora, jogos[cursor].placar_fora);
+
+    sprintf(buffer, "%d", cursor);
+    mqtt_publish(state.mqtt_client_inst, "/dados_tempo", buffer, strlen(buffer),
+                 0, 100, NULL, NULL);
+    return;
+  }
+
+  if (gpio == PINO_BOTAO_A) {
+    if (menu == PARTIDAS) {
+
+      return;
+    }
+
+    tamanho_tempo = 0;
+    menu = PARTIDAS;
+    sprintf(buffer, "%d", index_dados);
+
+    mqtt_publish(state.mqtt_client_inst, "/dados", buffer, strlen(buffer), 0,
+                 100, NULL, NULL);
+    return;
+  }
+}
 
 void vDisplayTask() {
   i2c_init(I2C_PORT, 100 * 1000);
@@ -58,7 +107,7 @@ void vDisplayTask() {
 
     ssd1306_fill(&ssd, !cor);
 
-    if (total_jogos < 8) {
+    if (total_jogos < 8 && menu == PARTIDAS) {
       ssd1306_draw_string(&ssd, "esperando jogos", 5, 20);
       ssd1306_send_data(&ssd);
       continue;
@@ -73,7 +122,6 @@ void vDisplayTask() {
       }
 
       ssd1306_draw_string(&ssd, tempos[0].data_partida, 5, 20);
-      ssd1306_draw_string(&ssd, tempos[0].tempo_minutos, 5, 30);
       ssd1306_draw_string(&ssd, tempos[0].horario_partida, 5, 40);
       ssd1306_send_data(&ssd);
     }
@@ -113,10 +161,16 @@ int main() {
   strcpy(jogo.time_fora, "0");
   strcpy(jogo.placar_casa, "0");
   strcpy(jogo.placar_fora, "0");
-  strcpy(jogo.tempo, "0");
   strcpy(jogo.status, "esperando");
 
-  menu = PARTIDA;
+  menu = PARTIDAS;
+  setup_botoes(PINO_BOTAO_A);
+  setup_botoes(PINO_BOTAO_B);
+
+  gpio_set_irq_enabled_with_callback(PINO_BOTAO_A, GPIO_IRQ_EDGE_FALL, true,
+                                     &gpio_irq_handler); // botao A
+  gpio_set_irq_enabled_with_callback(PINO_BOTAO_B, GPIO_IRQ_EDGE_FALL, true,
+                                     &gpio_irq_handler); // botao B
 
   if (cyw43_arch_init()) {
     printf("Erro ao inicializar o Wi-Fi\n");

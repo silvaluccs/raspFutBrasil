@@ -35,6 +35,7 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     tempos[tamanho_tempo].tempo_minutos = tempo->valueint;
     strcpy(tempos[tamanho_tempo].horario_partida, horario->valuestring);
     strcpy(tempos[tamanho_tempo].data_partida, data_da_partida->valuestring);
+
     ++tamanho_tempo;
 
     mqtt_publish(state->mqtt_client_inst, "/log", "chegou dados tempo",
