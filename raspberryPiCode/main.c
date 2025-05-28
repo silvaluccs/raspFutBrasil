@@ -11,6 +11,7 @@
 #include "setup.h"
 #include "ssd1306.h"
 #include "task.h"
+#include "tempo.h"
 #include <lwip/apps/mqtt.h>
 #include <stdio.h>
 
@@ -59,28 +60,34 @@ void vDisplayTask() {
 
     if (total_jogos < 8) {
       ssd1306_draw_string(&ssd, "esperando jogos", 5, 20);
-      gpio_put(led_pin_verde, 1);
-      gpio_put(led_pin_red, 1);
       ssd1306_send_data(&ssd);
       continue;
     }
 
-    gpio_put(led_pin_azul, 0);
-    gpio_put(led_pin_red, 0);
-    gpio_put(led_pin_verde, 0);
+    if (menu == PARTIDA) {
+
+      if (tamanho_tempo == 0) {
+        ssd1306_draw_string(&ssd, "sem dados", 5, 20);
+        ssd1306_send_data(&ssd);
+        continue;
+      }
+
+      ssd1306_draw_string(&ssd, tempos[0].data_partida, 5, 20);
+      ssd1306_draw_string(&ssd, tempos[0].tempo_minutos, 5, 30);
+      ssd1306_draw_string(&ssd, tempos[0].horario_partida, 5, 40);
+      ssd1306_send_data(&ssd);
+    }
+
     if (menu == PARTIDAS) {
       formatar_placar(&jogos[cursor], buffer);
       ssd1306_draw_string(&ssd, buffer, 10, 10);
       ssd1306_draw_string(&ssd, jogos[cursor].status, 45, 30);
       if (strcmp(jogos[cursor].status, "Fim") == 0) {
-        gpio_put(led_pin_red, 1);
       } else if (strcmp(jogos[cursor].status, "Prog.") == 0) {
-        gpio_put(led_pin_verde, 1);
-        gpio_put(led_pin_azul, 1);
-        gpio_put(led_pin_red, 1);
       }
       ssd1306_send_data(&ssd);
     }
+
     sleep_ms(1000);
   }
 }
@@ -109,7 +116,7 @@ int main() {
   strcpy(jogo.tempo, "0");
   strcpy(jogo.status, "esperando");
 
-  menu = PARTIDAS;
+  menu = PARTIDA;
 
   if (cyw43_arch_init()) {
     printf("Erro ao inicializar o Wi-Fi\n");

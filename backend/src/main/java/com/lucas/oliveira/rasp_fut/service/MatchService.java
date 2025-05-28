@@ -42,8 +42,7 @@ public class MatchService {
       match.setStatus(matchNode.get("shortStatusText").asText());
       String date = matchNode.get("startTime").asText();
       OffsetDateTime offsetDateTime = OffsetDateTime.parse(date);
-
-      String dateFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+      String dateFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
       String timeFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
       match.setDate(dateFormat);

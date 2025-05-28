@@ -34,6 +34,7 @@ public class MqttMessageHandler {
   public void handleMessage(Message<?> message) throws Exception {
 
     String payload = (String) message.getPayload();
+    String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
 
     List<Match> matches = matchService.getMatches();
     List<MatchDTO> matchDTOs = new ArrayList<>();
@@ -60,6 +61,19 @@ public class MqttMessageHandler {
     Map<String, Object> map = new HashMap<>();
 
     Integer index = Integer.parseInt(payload);
+
+    if (topic.equals("/dados_tempo")) {
+
+      map.put("tempo_partida", matchDTOs.get(index).time());
+      map.put("data_partida", matchDTOs.get(index).date());
+      map.put("horario_partida", matchDTOs.get(index).hour());
+
+      String json = objectMapper.writeValueAsString(map);
+
+      mqttPublisher.sendMessage("/tempo_jogo", json);
+      return;
+
+    }
 
     map.put("status", matchDTOs.get(index).status());
     map.put("time_casa", matchDTOs.get(index).homeTeam());

@@ -1,10 +1,15 @@
 #include "mqtt_connect.h"
 #include "cJSON.h"
 #include "jogo_dados.h"
+#include "tempo.h"
 #include <lwip/apps/mqtt.h>
 #include <stdio.h>
 
 Jogo jogos[MAXIMO_JOGOS];
+
+TEMPO_T tempos[max];
+
+int tamanho_tempo = 0;
 
 int index_dados = 0;
 int total_jogos = 0;
@@ -15,6 +20,27 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
 
   strncpy(state->data, (const char *)data, len);
   state->data[len] = '\0';
+
+  if (strcmp(state->topic, "/tempo_jogo") == 0) {
+
+    cJSON *jsonDados = cJSON_Parse(state->data);
+
+    cJSON *tempo = cJSON_GetObjectItemCaseSensitive(jsonDados, "tempo_partida");
+    cJSON *horario =
+        cJSON_GetObjectItemCaseSensitive(jsonDados, "horario_partida");
+
+    cJSON *data_da_partida =
+        cJSON_GetObjectItemCaseSensitive(jsonDados, "data_partida");
+
+    strcpy(tempos[tamanho_tempo].tempo_minutos, tempo->valuestring);
+    strcpy(tempos[tamanho_tempo].horario_partida, horario->valuestring);
+    strcpy(tempos[tamanho_tempo].data_partida, data_da_partida->valuestring);
+    ++tamanho_tempo;
+
+    mqtt_publish(state->mqtt_client_inst, "/log", "chegou dados tempo",
+                 strlen("chegou dados tempo"), 0, 100, NULL, NULL);
+    return;
+  }
 
   if (strcmp(state->topic, "/jogos") == 0) {
 
@@ -68,6 +94,7 @@ void mqtt_connection_cb(mqtt_client_t *client, void *arg,
     state->connect_done = true;
 
     mqtt_sub_unsub(state->mqtt_client_inst, "/jogos", 1, NULL, state, 1);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/tempo_jogo", 1, NULL, state, 1);
 
     // Publica uma mensagem indicando que está conectado
     mqtt_publish(state->mqtt_client_inst, "/log", "Conectado ao MQTT",
