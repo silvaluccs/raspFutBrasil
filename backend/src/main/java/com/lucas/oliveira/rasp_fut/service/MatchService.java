@@ -24,9 +24,9 @@ public class MatchService {
     this.webFutebolClient = webFutebolClient;
   }
 
-  public List<Match> getMatches() {
+  public List<Match> getMatches(Long competitionId) {
 
-    JsonNode dataBrazilFootball = webFutebolClient.getFootballMatchs();
+    JsonNode dataBrazilFootball = webFutebolClient.getFootballMatchs(competitionId);
 
     JsonNode matchsNode = dataBrazilFootball.get("games");
 

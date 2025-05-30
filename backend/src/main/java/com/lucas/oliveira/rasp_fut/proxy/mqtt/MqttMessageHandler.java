@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lucas.oliveira.rasp_fut.model.league.League;
 import com.lucas.oliveira.rasp_fut.model.match.Match;
 import com.lucas.oliveira.rasp_fut.model.match.MatchDTO;
 import com.lucas.oliveira.rasp_fut.service.MatchService;
@@ -24,10 +25,12 @@ public class MqttMessageHandler {
 
   private final MqttPublisher mqttPublisher;
   private final MatchService matchService;
+  private League league;
 
-  public MqttMessageHandler(MqttPublisher mqttPublisher, MatchService matchService) {
+  public MqttMessageHandler(MqttPublisher mqttPublisher, MatchService matchService, League league) {
     this.matchService = matchService;
     this.mqttPublisher = mqttPublisher;
+    this.league = league;
   }
 
   @ServiceActivator(inputChannel = "mqttInboundChannel")
@@ -36,7 +39,7 @@ public class MqttMessageHandler {
     String payload = (String) message.getPayload();
     String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
 
-    List<Match> matches = matchService.getMatches();
+    List<Match> matches = matchService.getMatches(league.getId());
     List<MatchDTO> matchDTOs = new ArrayList<>();
 
     ObjectMapper objectMapper = new ObjectMapper();
