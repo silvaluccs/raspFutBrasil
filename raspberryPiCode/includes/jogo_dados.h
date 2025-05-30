@@ -2,7 +2,6 @@
 #define JOGO_DADOS_H
 
 #include "stdbool.h"
-#define MAXIMO_JOGOS 11
 typedef struct {
     char time_casa[10];
     char time_fora[10];
@@ -14,7 +13,8 @@ typedef struct {
 } Jogo;
 
 extern Jogo jogo;
-extern Jogo jogos[MAXIMO_JOGOS];
+extern Jogo* jogos;
+extern int tamanho_array;
 extern int total_jogos;
 extern int index_dados;
 

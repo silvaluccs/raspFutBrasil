@@ -100,17 +100,17 @@ void vDisplayTask() {
 
   char buffer[20];
 
-  mqtt_publish(state.mqtt_client_inst, "/dados", "0", strlen("0"), 0, 100, NULL,
-               NULL);
-
+  mqtt_publish(state.mqtt_client_inst, "/tamanho_dados", "0", strlen("0"), 0,
+               100, NULL, NULL);
   while (true) {
 
     ssd1306_fill(&ssd, !cor);
 
-    if (total_jogos < 8 && menu == PARTIDAS) {
+    if (tamanho_array == 0 && total_jogos == tamanho_array &&
+        menu == PARTIDAS) {
 
       int iterador = 0;
-      while (total_jogos < 8) {
+      while (tamanho_array == 0 || total_jogos < tamanho_array - 1) {
         char str[50] = "carregando [";
         int pontos = iterador % 3;
 
@@ -181,7 +181,7 @@ void vDisplayTask() {
 
 bool repeating_timer_callback_joystick(struct repeating_timer *t) {
 
-  controle_joystick(&cursor);
+  controle_joystick(&cursor, tamanho_array);
   return true;
 }
 

@@ -1,11 +1,13 @@
 #include "mqtt_connect.h"
+#include "array_ferramentas.h"
 #include "cJSON.h"
 #include "jogo_dados.h"
 #include "tempo.h"
 #include <lwip/apps/mqtt.h>
 #include <stdio.h>
 
-Jogo jogos[MAXIMO_JOGOS];
+Jogo *jogos = NULL;
+int tamanho_array = 0;
 
 TEMPO_T tempos[max];
 
@@ -21,7 +23,26 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
   strncpy(state->data, (const char *)data, len);
   state->data[len] = '\0';
 
+  if (strcmp(state->topic, "/jogos_tamanho") == 0) {
+
+    mqtt_publish(state->mqtt_client_inst, "/log", "chegou tamanho",
+                 strlen("chegou tamanho"), 0, 100, NULL, NULL);
+
+    tamanho_array = atoi(state->data);
+
+    criar_array(tamanho_array);
+
+    mqtt_publish(state->mqtt_client_inst, "/dados", "0", strlen("0"), 0, 100,
+                 NULL, NULL);
+  }
+
   if (strcmp(state->topic, "/tempo_jogo") == 0) {
+
+    if (tamanho_array == 0) {
+      mqtt_publish(state->mqtt_client_inst, "/log", "dados não encontrados",
+                   strlen("dados não encontrados"), 0, 100, NULL, NULL);
+      return;
+    }
 
     cJSON *jsonDados = cJSON_Parse(state->data);
 
@@ -44,6 +65,12 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
   }
 
   if (strcmp(state->topic, "/jogos") == 0) {
+
+    if (tamanho_array == 0) {
+      mqtt_publish(state->mqtt_client_inst, "/log", "dados não encontrados",
+                   strlen("dados não encontrados"), 0, 100, NULL, NULL);
+      return;
+    }
 
     cJSON *jsonData = cJSON_Parse(state->data);
 
@@ -68,7 +95,7 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     cJSON_Delete(jsonData);
 
     ++total_jogos;
-    if (index_dados == MAXIMO_JOGOS - 1) {
+    if (index_dados == tamanho_array - 1) {
       index_dados = 0;
       return;
     } else {
@@ -96,6 +123,8 @@ void mqtt_connection_cb(mqtt_client_t *client, void *arg,
 
     mqtt_sub_unsub(state->mqtt_client_inst, "/jogos", 1, NULL, state, 1);
     mqtt_sub_unsub(state->mqtt_client_inst, "/tempo_jogo", 1, NULL, state, 1);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/jogos_tamanho", 1, NULL, state,
+                   1);
 
     // Publica uma mensagem indicando que está conectado
     mqtt_publish(state->mqtt_client_inst, "/log", "Conectado ao MQTT",

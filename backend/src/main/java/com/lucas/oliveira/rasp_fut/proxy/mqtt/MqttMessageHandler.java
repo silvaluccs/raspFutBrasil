@@ -60,6 +60,15 @@ public class MqttMessageHandler {
 
     Map<String, Object> map = new HashMap<>();
 
+    if (topic.equals("/tamanho_dados")) {
+
+      Integer size = matchDTOs.size();
+
+      mqttPublisher.sendMessage("/jogos_tamanho", String.valueOf(size));
+      return;
+
+    }
+
     try {
       Integer index = Integer.parseInt(payload);
 
