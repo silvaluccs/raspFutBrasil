@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +23,12 @@ public class MatchService {
 
   public MatchService(WebFutebolClient webFutebolClient) {
     this.webFutebolClient = webFutebolClient;
+  }
+
+  public List<String> getLeagues() {
+
+    return Arrays.asList("Brasileiro A", "Brasileiro B");
+
   }
 
   public List<Match> getMatches(Long competitionId) {

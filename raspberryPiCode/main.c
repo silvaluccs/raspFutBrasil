@@ -5,6 +5,7 @@
 #include "hardware/i2c.h"
 #include "jogo_dados.h"
 #include "joystick.h"
+#include "ligas.h"
 #include "menus.h"
 #include "mqtt_connect.h"
 #include "pico/stdlib.h"
@@ -100,12 +101,26 @@ void vDisplayTask() {
 
   char buffer[20];
 
-  mqtt_publish(state.mqtt_client_inst, "/tamanho_dados", "0", strlen("0"), 0,
-               100, NULL, NULL);
+  mqtt_publish(state.mqtt_client_inst, "/setup", "config init request",
+               strlen("config init request"), 0, 100, NULL, NULL);
+
+  // mqtt_publish(state.mqtt_client_inst, "/tamanho_dados", "0", strlen("0"), 0,
+  //              100, NULL, NULL);
   while (true) {
 
     ssd1306_fill(&ssd, !cor);
 
+    if (ligas_carregadas == 0) {
+      ssd1306_draw_string(&ssd, "carregando ligas", 5, 20);
+      ssd1306_send_data(&ssd);
+      continue;
+    }
+
+    ssd1306_draw_string(&ssd, ligas[0].nome, 5, 20);
+
+    ssd1306_send_data(&ssd);
+
+    /**
     if (tamanho_array == 0 && total_jogos == tamanho_array &&
         menu == PARTIDAS) {
 
@@ -163,19 +178,21 @@ void vDisplayTask() {
         ssd1306_draw_string(&ssd, buffer, 42, 30);
       }
 
-      ssd1306_send_data(&ssd);
-    }
 
-    if (menu == PARTIDAS) {
-      ssd1306_fill(&ssd, !cor);
+    ssd1306_send_data(&ssd);
+  }
 
-      formatar_placar(&jogos[cursor], buffer);
-      ssd1306_draw_string(&ssd, buffer, 10, 10);
-      ssd1306_draw_string(&ssd, jogos[cursor].status, 45, 30);
-      ssd1306_send_data(&ssd);
-    }
+  if (menu == PARTIDAS) {
+    ssd1306_fill(&ssd, !cor);
 
-    sleep_ms(1000);
+    formatar_placar(&jogos[cursor], buffer);
+    ssd1306_draw_string(&ssd, buffer, 10, 10);
+    ssd1306_draw_string(&ssd, jogos[cursor].status, 45, 30);
+    ssd1306_send_data(&ssd);
+  }
+
+  sleep_ms(1000);
+    */
   }
 }
 

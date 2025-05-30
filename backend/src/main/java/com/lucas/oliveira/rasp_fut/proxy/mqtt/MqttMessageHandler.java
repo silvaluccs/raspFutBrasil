@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lucas.oliveira.rasp_fut.model.league.League;
+import com.lucas.oliveira.rasp_fut.model.league.Leagues;
 import com.lucas.oliveira.rasp_fut.model.match.Match;
 import com.lucas.oliveira.rasp_fut.model.match.MatchDTO;
 import com.lucas.oliveira.rasp_fut.service.MatchService;
@@ -39,10 +40,51 @@ public class MqttMessageHandler {
     String payload = (String) message.getPayload();
     String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
 
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    if (payload.equalsIgnoreCase("config init request")) {
+
+      mqttPublisher.sendMessage("/log", "[BACKEND] send size of leagues");
+
+      String size = String.valueOf(matchService.getLeagues().size());
+
+      mqttPublisher.sendMessage("/setup/leagues/size", size);
+      return;
+
+    }
+
+    if (topic.equals("/setup")) {
+      mqttPublisher.sendMessage("/log", "[BACKEND] send init setup for raspberry pi");
+
+      Integer index = Integer.parseInt(payload);
+
+      List<String> leagues = matchService.getLeagues();
+
+      String nome = leagues.get(index);
+
+      mqttPublisher.sendMessage("/setup/leagues", nome);
+      return;
+
+    }
+
+    if (topic.equals("/liga")) {
+
+      if (payload.equalsIgnoreCase("B")) {
+        league.setName(Leagues.BRASILEIRA_B);
+        mqttPublisher.sendMessage("/log", "[BACKEND] change league to BRASILEIRA_B");
+        return;
+      }
+
+      if (payload.equalsIgnoreCase("A")) {
+        league.setName(Leagues.BRASILEIRA_A);
+        mqttPublisher.sendMessage("/log", "[BACKEND] change league to BRASILEIRA_A");
+        return;
+      }
+
+    }
+
     List<Match> matches = matchService.getMatches(league.getId());
     List<MatchDTO> matchDTOs = new ArrayList<>();
-
-    ObjectMapper objectMapper = new ObjectMapper();
 
     for (Match match : matches) {
 

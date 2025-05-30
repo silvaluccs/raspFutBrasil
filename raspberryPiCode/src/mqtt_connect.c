@@ -2,6 +2,7 @@
 #include "array_ferramentas.h"
 #include "cJSON.h"
 #include "jogo_dados.h"
+#include "ligas.h"
 #include "tempo.h"
 #include <lwip/apps/mqtt.h>
 #include <stdio.h>
@@ -17,11 +18,61 @@ int index_dados = 0;
 int total_jogos = 0;
 char buffer[10];
 
+Liga *ligas = NULL;
+int tamanho_ligas = 0;
+int index_liga = 0;
+int ligas_carregadas = 0;
+
 void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
   MQTT_CLIENT_DATA_T *state = (MQTT_CLIENT_DATA_T *)arg;
 
   strncpy(state->data, (const char *)data, len);
   state->data[len] = '\0';
+
+  if (strcmp(state->topic, "/setup/leagues/size") == 0) {
+
+    mqtt_publish(
+        state->mqtt_client_inst, "/log", "[RASPBERRY] receive leagues size",
+        strlen("[RASPBERRY] receive leagues size"), 0, 100, NULL, NULL);
+
+    tamanho_ligas = atoi(state->data);
+
+    if (ligas == NULL) {
+      criar_liga(tamanho_ligas);
+    } else {
+      redimensionar_liga(tamanho_ligas);
+    }
+
+    sprintf(buffer, "%d", index_liga);
+    mqtt_publish(state->mqtt_client_inst, "/setup", buffer, strlen(buffer), 0,
+                 100, NULL, NULL);
+
+    return;
+  }
+
+  if (strcmp(state->topic, "/setup/leagues") == 0) {
+
+    if (tamanho_ligas == 0) {
+
+      mqtt_publish(state->mqtt_client_inst, "/log",
+                   "[RASPBERRY] no leagues loaded",
+                   strlen("[RASPBERRY] no leagues loaded"), 0, 100, NULL, NULL);
+    }
+
+    strcpy(ligas[index_liga].nome, state->data);
+
+    ++ligas_carregadas;
+    if (index_liga == tamanho_ligas - 1) {
+      index_liga = 0;
+      return;
+    } else {
+
+      index_liga++;
+    }
+    sprintf(buffer, "%d", index_liga);
+    mqtt_publish(state->mqtt_client_inst, "/setup", buffer, strlen(buffer), 0,
+                 100, NULL, NULL);
+  }
 
   if (strcmp(state->topic, "/jogos_tamanho") == 0) {
 
@@ -124,6 +175,11 @@ void mqtt_connection_cb(mqtt_client_t *client, void *arg,
     mqtt_sub_unsub(state->mqtt_client_inst, "/jogos", 1, NULL, state, 1);
     mqtt_sub_unsub(state->mqtt_client_inst, "/tempo_jogo", 1, NULL, state, 1);
     mqtt_sub_unsub(state->mqtt_client_inst, "/jogos_tamanho", 1, NULL, state,
+                   1);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/setup/leagues/size", 1, NULL,
+                   state, 1);
+
+    mqtt_sub_unsub(state->mqtt_client_inst, "/setup/leagues", 1, NULL, state,
                    1);
 
     // Publica uma mensagem indicando que está conectado
