@@ -1,11 +1,17 @@
 #include "mqtt_connect.h"
 #include "array_ferramentas.h"
 #include "cJSON.h"
+#include "dados.h"
 #include "jogo_dados.h"
 #include "ligas.h"
+#include "stdbool.h"
 #include "tempo.h"
 #include <lwip/apps/mqtt.h>
 #include <stdio.h>
+
+volatile bool dados_times_prontos = false;
+
+volatile bool dados_ligas = false;
 
 Jogo *jogos = NULL;
 int tamanho_array = 0;
@@ -15,7 +21,7 @@ TEMPO_T tempos[max];
 int tamanho_tempo = 0;
 
 int index_dados = 0;
-int total_jogos = 0;
+volatile int total_jogos = 0;
 char buffer[10];
 
 Liga *ligas = NULL;
@@ -59,11 +65,14 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
                    strlen("[RASPBERRY] no leagues loaded"), 0, 100, NULL, NULL);
     }
 
+    dados_ligas = false;
+
     strcpy(ligas[index_liga].nome, state->data);
 
     ++ligas_carregadas;
     if (index_liga == tamanho_ligas - 1) {
       index_liga = 0;
+      dados_ligas = true;
       return;
     } else {
 
@@ -123,6 +132,8 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
       return;
     }
 
+    dados_times_prontos = false;
+
     cJSON *jsonData = cJSON_Parse(state->data);
 
     mqtt_publish(state->mqtt_client_inst, "/log", "chegou", strlen("chegou"), 0,
@@ -148,6 +159,7 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     ++total_jogos;
     if (index_dados == tamanho_array - 1) {
       index_dados = 0;
+      dados_times_prontos = true;
       return;
     } else {
       index_dados++;

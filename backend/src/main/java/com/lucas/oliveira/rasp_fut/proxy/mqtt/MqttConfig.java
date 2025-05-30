@@ -21,6 +21,7 @@ public class MqttConfig {
     this.mqttProperties = mqttProperties;
     mqttProperties.getTopics().add("/dados_tempo");
     mqttProperties.getTopics().add("/tamanho_dados");
+    mqttProperties.getTopics().add("/liga");
     mqttProperties.getTopics().add("/setup");
   }
 

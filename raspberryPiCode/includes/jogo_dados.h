@@ -15,7 +15,7 @@ typedef struct {
 extern Jogo jogo;
 extern Jogo* jogos;
 extern int tamanho_array;
-extern int total_jogos;
+extern volatile int total_jogos;
 extern int index_dados;
 
 #endif

@@ -70,12 +70,14 @@ public class MqttMessageHandler {
     if (topic.equals("/liga")) {
 
       if (payload.equalsIgnoreCase("B")) {
+        league.setId(116L);
         league.setName(Leagues.BRASILEIRA_B);
         mqttPublisher.sendMessage("/log", "[BACKEND] change league to BRASILEIRA_B");
         return;
       }
 
       if (payload.equalsIgnoreCase("A")) {
+        league.setId(113L);
         league.setName(Leagues.BRASILEIRA_A);
         mqttPublisher.sendMessage("/log", "[BACKEND] change league to BRASILEIRA_A");
         return;
@@ -123,6 +125,25 @@ public class MqttMessageHandler {
         return;
       }
 
+      if (topic.equals("/dados")) {
+
+        map.put("status", matchDTOs.get(index).status());
+        map.put("time_casa", matchDTOs.get(index).homeTeam());
+        map.put("time_fora", matchDTOs.get(index).awayTeam());
+
+        String placarCasa, placarFora;
+        placarCasa = String.valueOf(matchDTOs.get(index).homeScore());
+        placarFora = String.valueOf(matchDTOs.get(index).awayScore());
+
+        map.put("placar_casa", placarCasa);
+        map.put("placar_fora", placarFora);
+
+        String json = objectMapper.writeValueAsString(map);
+
+        mqttPublisher.sendMessage("/jogos", json);
+
+      }
+
       if (topic.equals("/dados_tempo")) {
 
         Integer tempoPartida = Integer.parseInt(matchDTOs.get(index).time());
@@ -136,21 +157,6 @@ public class MqttMessageHandler {
         return;
 
       }
-
-      map.put("status", matchDTOs.get(index).status());
-      map.put("time_casa", matchDTOs.get(index).homeTeam());
-      map.put("time_fora", matchDTOs.get(index).awayTeam());
-
-      String placarCasa, placarFora;
-      placarCasa = String.valueOf(matchDTOs.get(index).homeScore());
-      placarFora = String.valueOf(matchDTOs.get(index).awayScore());
-
-      map.put("placar_casa", placarCasa);
-      map.put("placar_fora", placarFora);
-
-      String json = objectMapper.writeValueAsString(map);
-
-      mqttPublisher.sendMessage("/jogos", json);
 
     } catch (Exception e) {
       logger.warning("Erro ao converter o payload para um Integer");

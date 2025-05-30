@@ -1,4 +1,7 @@
 #include "joystick.h"
+#include "jogo_dados.h"
+#include "ligas.h"
+#include "menus.h"
 
 void controle_joystick(int *cursor, int tam) {
 

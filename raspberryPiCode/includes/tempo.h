@@ -4,6 +4,7 @@
 #define max 1
 
 typedef struct {
+    int index;
     int tempo_minutos;
     char data_partida[15];
     char horario_partida[10];
