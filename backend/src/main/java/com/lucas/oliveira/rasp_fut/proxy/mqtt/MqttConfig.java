@@ -19,6 +19,8 @@ public class MqttConfig {
 
   public MqttConfig(MqttProperties mqttProperties) {
     this.mqttProperties = mqttProperties;
+    mqttProperties.getTopics().add("/dados_tempo");
+    mqttProperties.getTopics().add("/tamanho_dados");
   }
 
   @Bean
