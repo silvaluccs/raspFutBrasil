@@ -2,7 +2,7 @@
 #define JOGO_DADOS_H
 
 #include "stdbool.h"
-#define MAXIMO_JOGOS 9
+#define MAXIMO_JOGOS 11
 typedef struct {
     char time_casa[10];
     char time_fora[10];

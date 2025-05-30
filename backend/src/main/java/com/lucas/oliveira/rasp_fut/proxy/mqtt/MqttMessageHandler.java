@@ -60,36 +60,49 @@ public class MqttMessageHandler {
 
     Map<String, Object> map = new HashMap<>();
 
-    Integer index = Integer.parseInt(payload);
+    try {
+      Integer index = Integer.parseInt(payload);
 
-    if (topic.equals("/dados_tempo")) {
+      if (index > matchDTOs.size()) {
+        logger.warning("[backend] O index informado é maior que o número de matches");
+        mqttPublisher.sendMessage("/log", "O index informado é maior que o número de matches");
+        return;
+      }
 
-      Integer tempoPartida = Integer.parseInt(matchDTOs.get(index).time());
-      map.put("tempo_partida", tempoPartida);
-      map.put("data_partida", matchDTOs.get(index).date());
-      map.put("horario_partida", matchDTOs.get(index).hour());
+      if (topic.equals("/dados_tempo")) {
+
+        Integer tempoPartida = Integer.parseInt(matchDTOs.get(index).time());
+        map.put("tempo_partida", tempoPartida);
+        map.put("data_partida", matchDTOs.get(index).date());
+        map.put("horario_partida", matchDTOs.get(index).hour());
+
+        String json = objectMapper.writeValueAsString(map);
+
+        mqttPublisher.sendMessage("/tempo_jogo", json);
+        return;
+
+      }
+
+      map.put("status", matchDTOs.get(index).status());
+      map.put("time_casa", matchDTOs.get(index).homeTeam());
+      map.put("time_fora", matchDTOs.get(index).awayTeam());
+
+      String placarCasa, placarFora;
+      placarCasa = String.valueOf(matchDTOs.get(index).homeScore());
+      placarFora = String.valueOf(matchDTOs.get(index).awayScore());
+
+      map.put("placar_casa", placarCasa);
+      map.put("placar_fora", placarFora);
 
       String json = objectMapper.writeValueAsString(map);
 
-      mqttPublisher.sendMessage("/tempo_jogo", json);
+      mqttPublisher.sendMessage("/jogos", json);
+
+    } catch (Exception e) {
+      logger.warning("Erro ao converter o payload para um Integer");
+      mqttPublisher.sendMessage("/log", "[backend] Erro ao converter o payload para um Integer");
       return;
-
     }
-
-    map.put("status", matchDTOs.get(index).status());
-    map.put("time_casa", matchDTOs.get(index).homeTeam());
-    map.put("time_fora", matchDTOs.get(index).awayTeam());
-
-    String placarCasa, placarFora;
-    placarCasa = String.valueOf(matchDTOs.get(index).homeScore());
-    placarFora = String.valueOf(matchDTOs.get(index).awayScore());
-
-    map.put("placar_casa", placarCasa);
-    map.put("placar_fora", placarFora);
-
-    String json = objectMapper.writeValueAsString(map);
-
-    mqttPublisher.sendMessage("/jogos", json);
   }
 
 }

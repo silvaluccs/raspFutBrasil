@@ -9,7 +9,7 @@ void controle_joystick(int *cursor) {
   if (valor_eixo_x < 500 && *cursor > 0) {
     *cursor = *cursor - 1;
   }
-  if (valor_eixo_x > 3800 && *cursor < 8) {
+  if (valor_eixo_x > 3800 && *cursor < 10) {
     *cursor = *cursor + 1;
   }
 }

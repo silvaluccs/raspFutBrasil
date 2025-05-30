@@ -147,28 +147,27 @@ void vDisplayTask() {
         ssd1306_send_data(&ssd);
         iterador++;
       }
+      ssd1306_fill(&ssd, !cor);
 
       formatar_placar(&jogos[cursor], buffer);
       ssd1306_draw_string(&ssd, buffer, 10, 10);
 
       if (strcmp(jogos[cursor].status, "Fim") == 0) {
-        ssd1306_draw_string(&ssd, "Jogo Finalizado", 5, 30);
-
-        ssd1306_draw_string(&ssd, "ocorreu", 5, 35);
-        ssd1306_draw_string(&ssd, tempos[0].data_partida, 5, 40);
-        ssd1306_draw_string(&ssd, tempos[0].horario_partida, 5, 45);
-      }
-
-      if (tempos[0].tempo_minutos == -1) {
-        ssd1306_draw_string(&ssd, "inicio em:", 2, 30);
-        ssd1306_draw_string(&ssd, tempos[0].horario_partida, 2, 40);
-        ssd1306_draw_string(&ssd, tempos[0].data_partida, 2, 50);
+        ssd1306_draw_string(&ssd, tempos[0].horario_partida, 42, 30);
+        ssd1306_draw_string(&ssd, tempos[0].data_partida, 24, 40);
+      } else if (tempos[0].tempo_minutos == -1) {
+        ssd1306_draw_string(&ssd, tempos[0].horario_partida, 42, 30);
+        ssd1306_draw_string(&ssd, tempos[0].data_partida, 24, 40);
+      } else if (tempos[0].tempo_minutos > -1) {
+        snprintf(buffer, sizeof(buffer), "%d'", tempos[0].tempo_minutos);
+        ssd1306_draw_string(&ssd, buffer, 42, 30);
       }
 
       ssd1306_send_data(&ssd);
     }
 
     if (menu == PARTIDAS) {
+      ssd1306_fill(&ssd, !cor);
 
       formatar_placar(&jogos[cursor], buffer);
       ssd1306_draw_string(&ssd, buffer, 10, 10);

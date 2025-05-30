@@ -36,41 +36,39 @@ public class MatchService {
 
       Match match = new Match();
 
-      Integer time = matchNode.get("gameTime").asInt();
+      Integer time = matchNode.has("gameTime") ? matchNode.get("gameTime").asInt() : 0;
+      match.setStatus(matchNode.has("shortStatusText") ? matchNode.get("shortStatusText").asText() : "");
 
-      match.setTime(time);
-      match.setStatus(matchNode.get("shortStatusText").asText());
-      String date = matchNode.get("startTime").asText();
+      String date = matchNode.has("startTime") ? matchNode.get("startTime").asText() : "2000-01-01T00:00:00Z";
       OffsetDateTime offsetDateTime = OffsetDateTime.parse(date);
 
       String dateFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
       String timeFormat = offsetDateTime.format(DateTimeFormatter.ofPattern("HH:mm"));
 
+      match.setTime(time);
       match.setDate(dateFormat);
       match.setHour(timeFormat);
+
       JsonNode homeTeamNode = matchNode.get("homeCompetitor");
       JsonNode awayTeamNode = matchNode.get("awayCompetitor");
 
       Team homeTeam = new Team();
-
-      homeTeam.setId(homeTeamNode.get("id").asLong());
-      homeTeam.setName(homeTeamNode.get("name").asText());
-      homeTeam.setShortName(homeTeamNode.get("symbolicName").asText());
+      homeTeam.setId(homeTeamNode.has("id") ? homeTeamNode.get("id").asLong() : 0L);
+      homeTeam.setName(homeTeamNode.has("name") ? homeTeamNode.get("name").asText() : "");
+      homeTeam.setShortName(homeTeamNode.has("symbolicName") ? homeTeamNode.get("symbolicName").asText() : "");
 
       Team awayTeam = new Team();
-
-      awayTeam.setId(awayTeamNode.get("id").asLong());
-      awayTeam.setName(awayTeamNode.get("name").asText());
-      awayTeam.setShortName(awayTeamNode.get("symbolicName").asText());
+      awayTeam.setId(awayTeamNode.has("id") ? awayTeamNode.get("id").asLong() : 0L);
+      awayTeam.setName(awayTeamNode.has("name") ? awayTeamNode.get("name").asText() : "");
+      awayTeam.setShortName(awayTeamNode.has("symbolicName") ? awayTeamNode.get("symbolicName").asText() : "");
 
       match.setHomeTeam(homeTeam);
       match.setAwayTeam(awayTeam);
 
-      match.setHomeScore(homeTeamNode.get("score").asInt());
-      match.setAwayScore(awayTeamNode.get("score").asInt());
+      match.setHomeScore(homeTeamNode.has("score") ? homeTeamNode.get("score").asInt() : 0);
+      match.setAwayScore(awayTeamNode.has("score") ? awayTeamNode.get("score").asInt() : 0);
 
       matchs.add(match);
-
     });
 
     return matchs;
@@ -86,8 +84,6 @@ public class MatchService {
     }
 
     JsonNode matchNode = matchStats.get("games").get(0);
-
-    Long id = matchNode.get("id").asLong();
 
     String homeTeam = matchNode.get("homeCompetitor").get("symbolicName").asText();
     Integer homeScore = matchNode.get("homeCompetitor").get("score").asInt();

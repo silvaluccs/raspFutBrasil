@@ -68,7 +68,7 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     cJSON_Delete(jsonData);
 
     ++total_jogos;
-    if (index_dados == 8) {
+    if (index_dados == MAXIMO_JOGOS - 1) {
       index_dados = 0;
       return;
     } else {
