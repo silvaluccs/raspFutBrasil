@@ -44,7 +44,23 @@ public class MatchService {
       Match match = new Match();
 
       Integer time = matchNode.has("gameTime") ? matchNode.get("gameTime").asInt() : 0;
-      match.setStatus(matchNode.has("shortStatusText") ? matchNode.get("shortStatusText").asText() : "");
+      String status = (matchNode.has("shortStatusText") ? matchNode.get("shortStatusText").asText() : "");
+
+      if (status.contains("1")) {
+
+        status = "Primeiro tempo";
+
+      } else if (status.contains("2")) {
+
+        status = "Segundo tempo";
+
+      } else if (status.contains("Int.")) {
+
+        status = "Intervalo";
+
+      }
+
+      match.setStatus(status);
 
       String date = matchNode.has("startTime") ? matchNode.get("startTime").asText() : "2000-01-01T00:00:00Z";
       OffsetDateTime offsetDateTime = OffsetDateTime.parse(date);
