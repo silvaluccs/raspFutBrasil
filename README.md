@@ -29,13 +29,4 @@ O **raspFutBrasil** é um sistema embarcado desenvolvido com **RP2040 (Raspberry
 
 ---
 
-## 📁 Estrutura do Projeto
-raspFutBrasil-main/
-│
-├── backend/ # Projeto Spring Boot (Java)
-│ ├── src/main/java/ # Código-fonte da API
-│ ├── pom.xml # Dependências Maven
-│ └── Dockerfile # Containerização
-│
-├── docker-compose.yml # Orquestração dos containers
-└── README.md # Este arquivo
+
