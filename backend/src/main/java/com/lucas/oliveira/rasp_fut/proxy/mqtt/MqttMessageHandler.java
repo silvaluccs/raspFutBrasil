@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lucas.oliveira.rasp_fut.model.league.League;
+import com.lucas.oliveira.rasp_fut.model.league.Leagues;
 import com.lucas.oliveira.rasp_fut.model.match.Match;
 import com.lucas.oliveira.rasp_fut.model.match.MatchDTO;
 import com.lucas.oliveira.rasp_fut.service.MatchService;
@@ -24,10 +26,12 @@ public class MqttMessageHandler {
 
   private final MqttPublisher mqttPublisher;
   private final MatchService matchService;
+  private League league;
 
-  public MqttMessageHandler(MqttPublisher mqttPublisher, MatchService matchService) {
+  public MqttMessageHandler(MqttPublisher mqttPublisher, MatchService matchService, League league) {
     this.matchService = matchService;
     this.mqttPublisher = mqttPublisher;
+    this.league = league;
   }
 
   @ServiceActivator(inputChannel = "mqttInboundChannel")
@@ -36,10 +40,53 @@ public class MqttMessageHandler {
     String payload = (String) message.getPayload();
     String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
 
-    List<Match> matches = matchService.getMatches();
-    List<MatchDTO> matchDTOs = new ArrayList<>();
-
     ObjectMapper objectMapper = new ObjectMapper();
+
+    if (payload.equalsIgnoreCase("config init request")) {
+
+      mqttPublisher.sendMessage("/log", "[BACKEND] send size of leagues");
+
+      String size = String.valueOf(matchService.getLeagues().size());
+
+      mqttPublisher.sendMessage("/setup/leagues/size", size);
+      return;
+
+    }
+
+    if (topic.equals("/setup")) {
+      mqttPublisher.sendMessage("/log", "[BACKEND] send init setup for raspberry pi");
+
+      Integer index = Integer.parseInt(payload);
+
+      List<String> leagues = matchService.getLeagues();
+
+      String nome = leagues.get(index);
+
+      mqttPublisher.sendMessage("/setup/leagues", nome);
+      return;
+
+    }
+
+    if (topic.equals("/liga")) {
+
+      if (payload.equalsIgnoreCase("B")) {
+        league.setId(116L);
+        league.setName(Leagues.BRASILEIRA_B);
+        mqttPublisher.sendMessage("/log", "[BACKEND] change league to BRASILEIRA_B");
+        return;
+      }
+
+      if (payload.equalsIgnoreCase("A")) {
+        league.setId(113L);
+        league.setName(Leagues.BRASILEIRA_A);
+        mqttPublisher.sendMessage("/log", "[BACKEND] change league to BRASILEIRA_A");
+        return;
+      }
+
+    }
+
+    List<Match> matches = matchService.getMatches(league.getId());
+    List<MatchDTO> matchDTOs = new ArrayList<>();
 
     for (Match match : matches) {
 
@@ -78,6 +125,25 @@ public class MqttMessageHandler {
         return;
       }
 
+      if (topic.equals("/dados")) {
+
+        map.put("status", matchDTOs.get(index).status());
+        map.put("time_casa", matchDTOs.get(index).homeTeam());
+        map.put("time_fora", matchDTOs.get(index).awayTeam());
+
+        String placarCasa, placarFora;
+        placarCasa = String.valueOf(matchDTOs.get(index).homeScore());
+        placarFora = String.valueOf(matchDTOs.get(index).awayScore());
+
+        map.put("placar_casa", placarCasa);
+        map.put("placar_fora", placarFora);
+
+        String json = objectMapper.writeValueAsString(map);
+
+        mqttPublisher.sendMessage("/jogos", json);
+
+      }
+
       if (topic.equals("/dados_tempo")) {
 
         Integer tempoPartida = Integer.parseInt(matchDTOs.get(index).time());
@@ -91,21 +157,6 @@ public class MqttMessageHandler {
         return;
 
       }
-
-      map.put("status", matchDTOs.get(index).status());
-      map.put("time_casa", matchDTOs.get(index).homeTeam());
-      map.put("time_fora", matchDTOs.get(index).awayTeam());
-
-      String placarCasa, placarFora;
-      placarCasa = String.valueOf(matchDTOs.get(index).homeScore());
-      placarFora = String.valueOf(matchDTOs.get(index).awayScore());
-
-      map.put("placar_casa", placarCasa);
-      map.put("placar_fora", placarFora);
-
-      String json = objectMapper.writeValueAsString(map);
-
-      mqttPublisher.sendMessage("/jogos", json);
 
     } catch (Exception e) {
       logger.warning("Erro ao converter o payload para um Integer");

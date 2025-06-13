@@ -1,16 +1,19 @@
 #include "FreeRTOS.h"
+#include "dados.h"
 #include "debouce.h"
 #include "font.h"
 #include "formatar.h"
 #include "hardware/i2c.h"
 #include "jogo_dados.h"
 #include "joystick.h"
+#include "ligas.h"
 #include "menus.h"
 #include "mqtt_connect.h"
 #include "pico/stdlib.h"
 #include "queue.h"
 #include "setup.h"
 #include "ssd1306.h"
+#include "stdbool.h"
 #include "task.h"
 #include "tempo.h"
 #include <lwip/apps/mqtt.h>
@@ -36,7 +39,60 @@ MENUS menu;
 
 static uint32_t ultimo_tempo = 0;
 
+struct repeating_timer timer_dados;
+
 int cursor = 0;
+int cursor_liga = 0;
+
+bool timer_dados_ativo = false;
+
+void request_menu_partidas(char *buffer) {
+
+  tamanho_tempo = 0;
+  total_jogos = 0;
+  menu = PARTIDAS;
+  dados_times_prontos = false;
+
+  mqtt_publish(state.mqtt_client_inst, "/dados", "0", strlen("0"), 0, 100, NULL,
+               NULL);
+}
+
+void request_menu_partida(char *buffer) {
+
+  total_jogos = 0;
+  menu = PARTIDA;
+  tamanho_tempo = 0;
+
+  strcpy(jogo.status, jogos[cursor].status);
+  strcpy(jogo.time_casa, jogos[cursor].time_casa);
+  strcpy(jogo.time_fora, jogos[cursor].time_fora);
+  strcpy(jogo.placar_casa, jogos[cursor].placar_casa);
+  strcpy(jogo.placar_fora, jogos[cursor].placar_fora);
+
+  sprintf(buffer, "%d", cursor);
+  tempos[0].index = cursor;
+  mqtt_publish(state.mqtt_client_inst, "/dados_tempo", buffer, strlen(buffer),
+               0, 100, NULL, NULL);
+}
+
+void escolher_liga() {
+
+  if (cursor_liga == 0) {
+    mqtt_publish(state.mqtt_client_inst, "/liga", "A", strlen("A"), 0, 100,
+                 NULL, NULL);
+  } else if (cursor_liga == 1) {
+
+    mqtt_publish(state.mqtt_client_inst, "/liga", "B", strlen("B"), 0, 100,
+                 NULL, NULL);
+  }
+}
+
+void request_ligas() {
+  ligas_carregadas = 0;
+  mqtt_publish(state.mqtt_client_inst, "/setup", "0", strlen("0"), 0, 100, NULL,
+               NULL);
+  menu = LIGAS;
+}
 
 void gpio_irq_handler(uint gpio, uint32_t events) {
 
@@ -46,38 +102,88 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
 
   char buffer[20];
   if (gpio == PINO_BOTAO_B) {
+
+    if (menu == LIGAS) {
+      escolher_liga();
+      request_menu_partidas(buffer);
+      menu = PARTIDAS;
+
+      cursor = 0;
+      return;
+    }
+
+    if (menu == PARTIDAS) {
+      request_menu_partida(buffer);
+      return;
+    }
+
     if (menu == PARTIDA) {
       return;
     }
-
-    total_jogos = 0;
-    menu = PARTIDA;
-
-    strcpy(jogo.status, jogos[cursor].status);
-    strcpy(jogo.time_casa, jogos[cursor].time_casa);
-    strcpy(jogo.time_fora, jogos[cursor].time_fora);
-    strcpy(jogo.placar_casa, jogos[cursor].placar_casa);
-    strcpy(jogo.placar_fora, jogos[cursor].placar_fora);
-
-    sprintf(buffer, "%d", cursor);
-    mqtt_publish(state.mqtt_client_inst, "/dados_tempo", buffer, strlen(buffer),
-                 0, 100, NULL, NULL);
-    return;
   }
 
   if (gpio == PINO_BOTAO_A) {
-    if (menu == PARTIDAS) {
 
+    if (menu == LIGAS) {
       return;
     }
 
-    tamanho_tempo = 0;
-    menu = PARTIDAS;
-    sprintf(buffer, "%d", index_dados);
+    if (menu == PARTIDAS) {
+      request_ligas();
 
-    mqtt_publish(state.mqtt_client_inst, "/dados", buffer, strlen(buffer), 0,
-                 100, NULL, NULL);
+      cursor = 0;
+      return;
+    }
+
+    if (menu == PARTIDA) {
+      request_menu_partidas(buffer);
+    }
+
     return;
+  }
+}
+
+bool repeating_timer_callback_dados(struct repeating_timer *t) {
+
+  char buffer[20];
+  if (menu == LIGAS) {
+    return true;
+  }
+  if (menu == PARTIDA) {
+    sprintf(buffer, "%d", cursor);
+    tempos[0].index = cursor;
+    mqtt_publish(state.mqtt_client_inst, "/dados_tempo", buffer, strlen(buffer),
+                 0, 100, NULL, NULL);
+
+    return true;
+  }
+
+  if (menu == PARTIDAS) {
+    total_jogos = 0;
+    mqtt_publish(state.mqtt_client_inst, "/dados", "0", strlen("0"), 0, 100,
+                 NULL, NULL);
+    return true;
+  }
+  return true;
+}
+
+void vdataTask() {
+
+  char buffer[20];
+  while (true) {
+    if (menu == LIGAS) {
+      continue;
+    }
+    if (menu == PARTIDA) {
+      tamanho_tempo = 0;
+      sprintf(buffer, "%d", cursor);
+      tempos[0].index = cursor;
+      mqtt_publish(state.mqtt_client_inst, "/dados_tempo", buffer,
+                   strlen(buffer), 0, 100, NULL, NULL);
+
+      vTaskDelay(pdMS_TO_TICKS(1000)); // dorme por 1000 ms (1 segundo)
+      continue;
+    }
   }
 }
 
@@ -102,15 +208,45 @@ void vDisplayTask() {
 
   mqtt_publish(state.mqtt_client_inst, "/tamanho_dados", "0", strlen("0"), 0,
                100, NULL, NULL);
+  vTaskDelay(pdMS_TO_TICKS(10000)); // dorme por 1000 ms (1 segundo)
+  mqtt_publish(state.mqtt_client_inst, "/setup", "config init request",
+               strlen("config init request"), 0, 100, NULL, NULL);
+  vTaskDelay(pdMS_TO_TICKS(10000)); // dorme por 1000 ms (1 segundo)
+  menu = LIGAS;
+
   while (true) {
 
     ssd1306_fill(&ssd, !cor);
 
-    if (tamanho_array == 0 && total_jogos == tamanho_array &&
-        menu == PARTIDAS) {
+    if (menu == LIGAS) {
+
+      timer_dados_ativo = false;
+      int iterador = 0;
+      while (ligas_carregadas == 0 || ligas_carregadas < tamanho_ligas) {
+        char str[50] = "carregando [";
+        int pontos = iterador % 3;
+
+        for (int j = 0; j < pontos; j++) {
+          strcat(str, ".");
+        }
+
+        strcat(str, "]   ");
+
+        ssd1306_draw_string(&ssd, str, 5, 20);
+
+        ssd1306_send_data(&ssd);
+        iterador++;
+        continue;
+      }
+
+      ssd1306_draw_string(&ssd, ligas[cursor_liga].nome, 5, 20);
+
+      ssd1306_send_data(&ssd);
+    }
+    if (tamanho_array == 0 && !dados_times_prontos) {
 
       int iterador = 0;
-      while (tamanho_array == 0 || total_jogos < tamanho_array - 1) {
+      while (!dados_times_prontos) {
         char str[50] = "carregando [";
         int pontos = iterador % 3;
 
@@ -126,11 +262,18 @@ void vDisplayTask() {
         iterador++;
       }
 
+      vTaskDelay(pdMS_TO_TICKS(1500)); // dorme por 1000 ms (1 segundo)
+
       continue;
     }
 
     if (menu == PARTIDA) {
 
+      if (timer_dados_ativo == false) {
+        timer_dados_ativo = true;
+        add_repeating_timer_ms(10000, repeating_timer_callback_dados, NULL,
+                               &timer_dados);
+      }
       int iterador = 0;
       while (tamanho_tempo == 0) {
         char str[50] = "carregando [";
@@ -149,10 +292,11 @@ void vDisplayTask() {
       }
       ssd1306_fill(&ssd, !cor);
 
-      formatar_placar(&jogos[cursor], buffer);
+      int index = tempos[0].index;
+      formatar_placar(&jogos[index], buffer);
       ssd1306_draw_string(&ssd, buffer, 10, 10);
 
-      if (strcmp(jogos[cursor].status, "Fim") == 0) {
+      if (strcmp(jogos[index].status, "Fim") == 0) {
         ssd1306_draw_string(&ssd, tempos[0].horario_partida, 42, 30);
         ssd1306_draw_string(&ssd, tempos[0].data_partida, 24, 40);
       } else if (tempos[0].tempo_minutos == -1) {
@@ -160,28 +304,52 @@ void vDisplayTask() {
         ssd1306_draw_string(&ssd, tempos[0].data_partida, 24, 40);
       } else if (tempos[0].tempo_minutos > -1) {
         snprintf(buffer, sizeof(buffer), "%d'", tempos[0].tempo_minutos);
-        ssd1306_draw_string(&ssd, buffer, 42, 30);
+        ssd1306_draw_string(&ssd, buffer, 50, 30);
       }
 
       ssd1306_send_data(&ssd);
     }
 
     if (menu == PARTIDAS) {
+
+      if (timer_dados_ativo == true) {
+        timer_dados_ativo = false;
+        cancel_repeating_timer(&timer_dados);
+      }
+
       ssd1306_fill(&ssd, !cor);
 
       formatar_placar(&jogos[cursor], buffer);
       ssd1306_draw_string(&ssd, buffer, 10, 10);
-      ssd1306_draw_string(&ssd, jogos[cursor].status, 45, 30);
+
+      if (strcmp(jogos[cursor].status, "Fim") == 0 ||
+          strcmp(jogos[cursor].status, "Prog.") == 0) {
+
+        ssd1306_draw_string(&ssd, jogos[cursor].status, 45, 30);
+      } else if (strcmp(jogos[cursor].status, "Intervalo") == 0) {
+        ssd1306_draw_string(&ssd, jogos[cursor].status, 20, 30);
+      } else {
+        ssd1306_draw_string(&ssd, jogos[cursor].status, 0, 30);
+      }
       ssd1306_send_data(&ssd);
     }
-
-    sleep_ms(1000);
   }
 }
 
 bool repeating_timer_callback_joystick(struct repeating_timer *t) {
 
-  controle_joystick(&cursor, tamanho_array);
+  if (menu == LIGAS) {
+    controle_joystick(&cursor_liga, ligas_carregadas);
+    return true;
+  }
+  if (menu == PARTIDA) {
+    return true;
+  }
+
+  if (!dados_times_prontos) {
+    return true;
+  }
+  controle_joystick(&cursor, total_jogos);
   return true;
 }
 

@@ -2,7 +2,7 @@
 #define MENUS_H
 
 typedef enum {
-
+    LIGAS,
     PARTIDAS,
     PARTIDA
 

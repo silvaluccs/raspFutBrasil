@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,9 +25,15 @@ public class MatchService {
     this.webFutebolClient = webFutebolClient;
   }
 
-  public List<Match> getMatches() {
+  public List<String> getLeagues() {
 
-    JsonNode dataBrazilFootball = webFutebolClient.getFootballMatchs();
+    return Arrays.asList("Brasileiro A", "Brasileiro B");
+
+  }
+
+  public List<Match> getMatches(Long competitionId) {
+
+    JsonNode dataBrazilFootball = webFutebolClient.getFootballMatchs(competitionId);
 
     JsonNode matchsNode = dataBrazilFootball.get("games");
 
@@ -37,7 +44,23 @@ public class MatchService {
       Match match = new Match();
 
       Integer time = matchNode.has("gameTime") ? matchNode.get("gameTime").asInt() : 0;
-      match.setStatus(matchNode.has("shortStatusText") ? matchNode.get("shortStatusText").asText() : "");
+      String status = (matchNode.has("shortStatusText") ? matchNode.get("shortStatusText").asText() : "");
+
+      if (status.matches("^1")) {
+
+        status = "Primeiro tempo";
+
+      } else if (status.matches("^2")) {
+
+        status = "Segundo tempo";
+
+      } else if (status.contains("Int.")) {
+
+        status = "Intervalo";
+
+      }
+
+      match.setStatus(status);
 
       String date = matchNode.has("startTime") ? matchNode.get("startTime").asText() : "2000-01-01T00:00:00Z";
       OffsetDateTime offsetDateTime = OffsetDateTime.parse(date);
