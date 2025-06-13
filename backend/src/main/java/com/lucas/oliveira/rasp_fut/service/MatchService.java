@@ -46,11 +46,11 @@ public class MatchService {
       Integer time = matchNode.has("gameTime") ? matchNode.get("gameTime").asInt() : 0;
       String status = (matchNode.has("shortStatusText") ? matchNode.get("shortStatusText").asText() : "");
 
-      if (status.contains("1")) {
+      if (status.matches("^1")) {
 
         status = "Primeiro tempo";
 
-      } else if (status.contains("2")) {
+      } else if (status.matches("^2")) {
 
         status = "Segundo tempo";
 

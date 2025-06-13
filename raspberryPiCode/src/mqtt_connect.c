@@ -113,9 +113,9 @@ void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
     cJSON *data_da_partida =
         cJSON_GetObjectItemCaseSensitive(jsonDados, "data_partida");
 
-    tempos[tamanho_tempo].tempo_minutos = tempo->valueint;
-    strcpy(tempos[tamanho_tempo].horario_partida, horario->valuestring);
-    strcpy(tempos[tamanho_tempo].data_partida, data_da_partida->valuestring);
+    tempos[0].tempo_minutos = tempo->valueint;
+    strcpy(tempos[0].horario_partida, horario->valuestring);
+    strcpy(tempos[0].data_partida, data_da_partida->valuestring);
 
     ++tamanho_tempo;
 
