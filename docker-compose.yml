@@ -1,19 +1,4 @@
 services:
-
-  postgres:
-    image: postgres:15-alpine
-    restart: always
-    environment:
-      POSTGRES_DB: raspberryFut
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - mqtt-net
-
   mosquitto:
     build: ./mosquitto
     ports:
@@ -27,26 +12,17 @@ services:
   backend:
     build: ./backend
     ports:
-      - "8080:8080"
+      - "3000:3000"
+    env_file:
+      - ./backend/.env
     environment:
-      - API_URL=https://webws.365scores.com/web/games/current/?appTypeId=5&langId=31&timezoneName=America/Bahia&userCountryId=21&competitions=113&showOdds=false&includeTopBettingOpportunity=1&topBookmaker=156&lastUpdateId=5187162583
-      - MQTT_BROKER_HOST=mosquitto
-      - MQTT_BROKER_PORT=1883
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=raspberryFut
-      - DB_USER=admin
-      - DB_PASSWORD=admin
+      # sobrescreve só o que muda no docker
+      - MQTT_BROKER_URL=mqtt://mosquitto:1883
     networks:
       - mqtt-net
     depends_on:
       - mosquitto
-      - postgres
 
 networks:
   mqtt-net:
     driver: bridge
-
-volumes:
-  pgdata:
-

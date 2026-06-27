@@ -6,7 +6,7 @@ import {
   IMatchDetails,
   IMatchEvent,
   IMatchStatus,
-} from "../../domain/entities/IMatch";
+} from "../../domain/entities/match.entity";
 import { MatchNotFoundException } from "../shared/exceptions";
 
 interface GamesResponse {

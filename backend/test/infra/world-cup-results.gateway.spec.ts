@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 import axios from "axios";
 import { WorldCupResultGateway } from "../../src/infra/gateways/world-cup-results.gateway";
-import { IMatchStatus } from "../../src/domain/entities/IMatch";
+import { IMatchStatus } from "../../src/domain/entities/match.entity";
 import { MatchNotFoundException } from "../../src/infra/shared/exceptions";
 
 jest.mock("axios");
@@ -164,12 +164,14 @@ describe("WorldCupResultGateway", () => {
 
   describe("getMatchFromId", () => {
     it("retorna detalhes da partida", async () => {
+      mockGet.mockResolvedValue({ data: { game: makeFakeGameDetails() } });
+
       const result = await gateway.getMatchFromId(1);
 
       expect(result.venue).toBe("Hard Rock Stadium (Miami)");
       expect(result.gameTimeDisplay).toBe("41'");
       expect(result.statusText).toBe("Primeiro Tempo");
-      expect(result.events).toHaveLength(2); // só os gols
+      expect(result.events).toHaveLength(2);
       expect(result.events[0].minute).toBe("23'");
     });
 

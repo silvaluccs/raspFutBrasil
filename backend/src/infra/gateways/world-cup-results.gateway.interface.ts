@@ -1,4 +1,4 @@
-import { IMatch, IMatchDetails } from "../../domain/entities/IMatch";
+import { IMatch, IMatchDetails } from "../../domain/entities/match.entity";
 
 export interface IWorldCupResultsGateway {
   getAllMatch(): Promise<IMatch[]>;
