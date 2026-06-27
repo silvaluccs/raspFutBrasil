@@ -1,8 +1,9 @@
 /// <reference types="jest" />
 import axios from "axios";
 import { WorldCupResultGateway } from "../../src/infra/gateways/world-cup-results.gateway";
-import { IMatchStatus } from "../../src/app/domain/entities/IMatch";
+import { IMatchStatus } from "../../src/domain/entities/match.entity";
 import { MatchNotFoundException } from "../../src/infra/shared/exceptions";
+import { IWorldCupResultsGateway } from "../../src/infra/gateways/world-cup-results.gateway.interface";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -26,7 +27,7 @@ const makeFakeGame = (overrides = {}) => ({
     awayColor: "#FFFFFF",
   },
   ...overrides,
-})
+});
 
 const makeFakeGameDetails = (overrides = {}) => ({
   ...makeFakeGame(),
@@ -49,9 +50,9 @@ const makeFakeGameDetails = (overrides = {}) => ({
     },
   ],
   ...overrides,
-})
+});
 describe("WorldCupResultGateway", () => {
-  let gateway: WorldCupResultGateway;
+  let gateway: IWorldCupResultsGateway;
   let mockGet: jest.Mock;
 
   beforeEach(() => {
@@ -163,29 +164,24 @@ describe("WorldCupResultGateway", () => {
   });
 
   describe("getMatchFromId", () => {
-
     it("retorna detalhes da partida", async () => {
+      mockGet.mockResolvedValue({ data: { game: makeFakeGameDetails() } });
 
-      const result = await gateway.getMatchFromId(1)
+      const result = await gateway.getMatchFromId(1);
 
-      expect(result.venue).toBe("Hard Rock Stadium (Miami)")
-      expect(result.gameTimeDisplay).toBe("41'")
-      expect(result.statusText).toBe("Primeiro Tempo")
-      expect(result.events).toHaveLength(2) // só os gols
-      expect(result.events[0].minute).toBe("23'")
+      expect(result.venue).toBe("Hard Rock Stadium (Miami)");
+      expect(result.gameTimeDisplay).toBe("41'");
+      expect(result.statusText).toBe("Primeiro Tempo");
+      expect(result.events).toHaveLength(2);
+      expect(result.events[0].minute).toBe("23'");
     });
 
     it("lança MatchNotFoundException quando a API falha", async () => {
-      mockGet.mockRejectedValue(new Error("Not found"))
+      mockGet.mockRejectedValue(new Error("Not found"));
 
-      await expect(gateway.getMatchFromId(99999))
-        .rejects
-        .toThrow(MatchNotFoundException)
-    })
-  })
-
-
-
-
-
+      await expect(gateway.getMatchFromId(99999)).rejects.toThrow(
+        MatchNotFoundException,
+      );
+    });
+  });
 });
