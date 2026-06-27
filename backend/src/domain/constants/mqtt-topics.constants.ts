@@ -7,4 +7,5 @@ export const MqttTopics = {
   CLOCK: (id: number) => `copa/partidas/${id}/tempo`,
   GOAL: (id: number) => `copa/partidas/${id}/gol`,
   STATUS: (id: number) => `copa/partidas/${id}/status`,
+  COMMANDS: "copa/comandos",
 } as const

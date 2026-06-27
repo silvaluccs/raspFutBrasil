@@ -72,4 +72,11 @@ export class MqttService implements IMqttService {
       });
     });
   }
+
+  onMessage(callback: (topic: string, message: string) => void): void {
+    if (!this.client) throw new Error("MQTT não conectado")
+    this.client.on("message", (topic, payload) => {
+      callback(topic, payload.toString())
+    })
+  }
 }
