@@ -3,6 +3,7 @@ import axios from "axios";
 import { WorldCupResultGateway } from "../../src/infra/gateways/world-cup-results.gateway";
 import { IMatchStatus } from "../../src/domain/entities/match.entity";
 import { MatchNotFoundException } from "../../src/infra/shared/exceptions";
+import { IWorldCupResultsGateway } from "../../src/infra/gateways/world-cup-results.gateway.interface";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -51,7 +52,7 @@ const makeFakeGameDetails = (overrides = {}) => ({
   ...overrides,
 });
 describe("WorldCupResultGateway", () => {
-  let gateway: WorldCupResultGateway;
+  let gateway: IWorldCupResultsGateway;
   let mockGet: jest.Mock;
 
   beforeEach(() => {
